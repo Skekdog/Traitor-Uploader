@@ -5,6 +5,8 @@ import type { BodyInit } from "bun";
 
 const PORT = 31352;
 
+const MAX_REQUEST_SIZE = 1024 * 1024 * 4; // 4MB. If anyone has a map larger than 4mb I will be very annoyed with them
+
 const test = "abc"
 
 type Operation<Response> = {
@@ -18,9 +20,35 @@ type Operation<Response> = {
 	response: Response,
 })
 
-// Incomplete because I don't care about the other fields
+// These are incomplete because I don't care about the other fields
+
+type AssetCreateRequest = {
+	assetType: "Model",
+	displayName: string,
+	description: string,
+	creationContext: {
+		creator: {
+			userId: number,
+		},
+	},
+}
+
+type AssetUpdateRequest = {
+	assetId: number,
+}
+
 type AssetResponse = {
 	assetId: number,
+}
+
+type InventoryResponse = {
+	inventoryItems: [
+		{
+			"assetDetails": {
+				"assetId": string,
+			},
+		}
+	]
 }
 
 type ErrorResponse = {
@@ -43,6 +71,8 @@ type RequestResponse<T> = {
 });
 
 async function makeRequest<T>(url: string, method?: HTTPMethod, body?: BodyInit): Promise<RequestResponse<T>> {
+	if (url.endsWith("/")) throw new Error("Must not have trailing slash...");
+
 	const response = await fetch(url, {
 		method: method,
 		body: body,
@@ -84,42 +114,85 @@ async function poll<T>(basePath: string, operation: Operation<T>): Promise<Reque
 	});
 }
 
-const app = new Elysia()
+function createFileForm(data: Uint8Array, fileName: string, mimeType: string): FormData {
+	const formData = new FormData();
+	const file = new File([data], fileName, { type: mimeType });
+	formData.append("fileContent", file);
+	return formData
+}
+
+const availableAssets: number[] = [];
+
+{
+	const response = await makeRequest<InventoryResponse>(`https://apis.roblox.com/cloud/v2/users/${env.UPLOADER_ACCOUNT_ID}/inventory-items?maxPageSize=100&filter=inventoryItemAssetTypes=MODEL,PACKAGE`, "GET");
+	if (!response.Ok) throw new Error("Failed to fetch inventory :sob: " + response.Result);
+	response.Result.inventoryItems.forEach(asset => {
+		availableAssets.push(Number.parseInt(asset.assetDetails.assetId));
+	});
+}
+
+const app = new Elysia({
+		serve: {
+			maxRequestBodySize: MAX_REQUEST_SIZE
+		}
+	})
 	.use(bearerAuth())
+	.patch("/publish-map", async ({bearer, body}) => {
+		// The first 8 bytes are used as the asset id
+
+		if (!bearer) return status(401, "Unauthorized");
+		if (bearer !== test) return status(403, "Forbidden");
+
+		const assetId = new DataView(body.slice(0, 8).buffer, 0, 8).getFloat64(0, true);
+		const assetContent = body.slice(8);
+
+		const formData = createFileForm(assetContent, "asset.rbxm", "model/x-rbxm");
+
+		const request: AssetUpdateRequest = {
+			assetId: assetId
+		}
+
+		formData.append("request", JSON.stringify(request));
+
+		const operation = await makeRequest<Operation<AssetResponse>>(`https://apis.roblox.com/assets/v1/assets/${assetId}`, "PATCH", formData);
+		if (!operation.Ok) return status(operation.Status, operation.Result);
+
+		const response = await poll("https://apis.roblox.com/assets/v1/", operation.Result);
+		return status(200, response.Result.toString());
+	}, {
+		body: t.Uint8Array(),
+	})
 	.post("/publish-map", async ({ bearer, body }) => {
 		if (!bearer) return status(401, "Unauthorized");
-
 		if (bearer !== test) return status(403, "Forbidden");
 
 		const formData = new FormData();
 
-		const request = {
+		// const formData = createFileForm(body, "asset.rbxm", "model/x-rbxm");
+
+		const request: AssetCreateRequest = {
 			assetType: "Model",
-			displayName: "Test",
+			displayName: "User Upload " + availableAssets.length,
 			description: "Test description",
 			creationContext: {
 				creator: {
-					userId: 10474615021,
+					userId: env.UPLOADER_ACCOUNT_ID,
 				},
 			},
-			assetId: 81237358985439,
 		};
 
 		formData.append("request", JSON.stringify(request));
 
-		const mapFile = new File([body], "test.rbxm", { type: "model/x-rbxm" });
-		formData.append("fileContent", mapFile);
+		formData.append("fileContent", new File([body], "asset.rbxm", { type: "model/x-rbxm" }));
 
-		const operation = await makeRequest<Operation<AssetResponse>>("https://apis.roblox.com/assets/v1/assets/81237358985439", "PATCH", formData);
-
+		const operation = await makeRequest<Operation<AssetResponse>>("https://apis.roblox.com/assets/v1/assets", "POST", formData);
 		if (!operation.Ok) return status(operation.Status, operation.Result);
 
 		const response = await poll("https://apis.roblox.com/assets/v1/", operation.Result);
-
 		return status(200, response.Result.toString());
 	}, {
 		body: t.Uint8Array(),
 	})
 	.listen(PORT);
 
-console.log(`Web interface starting on port ${app.server?.hostname}:${app.server?.port}`);
+console.log(`Server starting at ${app.server?.hostname}:${app.server?.port}`);
