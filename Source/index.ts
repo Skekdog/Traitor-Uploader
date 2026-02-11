@@ -40,11 +40,12 @@ type InventoryResponse = {
 	]
 }
 
-type ErrorResponse = {
+type AssetAuthoriseResponse = {
+	successAssetIds: number[],
 	errors: [
 		{
-			code: number,
-			message: string,
+			assetId: number,
+			code: string,
 		}
 	]
 }
@@ -60,7 +61,7 @@ const availableAssets: number[] = [];
 }
 
 async function authoriseGroup(assetId: number) {
-	const response = await net.makeRequest(`https://apis.roblox.com/asset-permissions-api/v1/assets/permissions`, "PATCH", JSON.stringify({
+	const response = await net.makeRequest<AssetAuthoriseResponse>(`https://apis.roblox.com/asset-permissions-api/v1/assets/permissions`, "PATCH", JSON.stringify({
 		subjectType: "Universe",
 		subjectId: env.EXPERIENCE_ID.toString(),
 		action: "Use",
@@ -73,7 +74,11 @@ async function authoriseGroup(assetId: number) {
 		enableDeepAccessCheck: false,
 	}), "application/json");
 
-	if (!response.Ok) console.log(response);
+	if (!response.Ok) return response;
+	if (response.Result.errors.length > 0) {
+		let errorResponse: net.RequestResponse<null> = {Status: 500, Ok: false, Result: net.parseError(response.Result)}
+		return errorResponse;
+	}
 
 	return response;
 }

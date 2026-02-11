@@ -23,6 +23,44 @@ export type Operation<Response> = {
 	response: Response,
 })
 
+export function parseError(error: Record<string, any> | Record<string, any>[]): string {
+	console.log(error);
+	if (typeof error !== "object") return JSON.stringify(error);
+
+	if (Array.isArray(error)) {
+		let result = "";
+		error.forEach(val => {
+			result += parseError(val);
+		});
+		return result;
+	}
+
+	if (error.title) {
+		// a v1 "detailed" error: https://create.roblox.com/docs/cloud/reference/errors#gateway-errors
+		let details = "";
+		if (error.errors) {
+			for (const [key, value] of Object.entries(error.errors)) {
+				details += key + ": " + value + "; ";
+			}
+			details = details.slice(0, -2);
+		}
+
+		return error.title;
+	} else if (error.message) {
+		return error.message;
+	} else if (error.errors) {
+		return parseError(error.errors);
+	}
+
+	let details = "";
+	for (const [key, value] of Object.entries(error)) {
+		details += key + ": " + value + "; ";
+	}
+	details = details.slice(0, -2);
+
+	return details ?? JSON.stringify(error);
+}
+
 export async function makeRequest<T>(url: string, method?: HTTPMethod, body?: BodyInit, contentType?: string): Promise<RequestResponse<T>> {
 	if (url.endsWith("/")) throw new Error("Must not have trailing slash...");
 
@@ -37,14 +75,15 @@ export async function makeRequest<T>(url: string, method?: HTTPMethod, body?: Bo
 		headers: headers,
 	});
 
-	const text = await response.text();
+	const text = await response.text() ?? response.statusText;
+	const asObject = JSON.parse(text);
 
 	if (!response.ok) return new Promise(async (resolve) => {
-		resolve({Ok: false, Result: text ?? response.statusText, Status: response.status})
+		resolve({Ok: false, Result: parseError(asObject), Status: response.status})
 	});
 
 	return new Promise(async (resolve) => {
-		resolve({Ok: true, Result: JSON.parse(text) as T, Status: response.status})
+		resolve({Ok: true, Result: asObject as T, Status: response.status})
 	});
 }
 
