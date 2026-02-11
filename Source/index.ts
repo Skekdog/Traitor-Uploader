@@ -181,7 +181,7 @@ async function updateAsset(bearer: string | undefined, body: Uint8Array) {
 	const response = await poll("https://apis.roblox.com/assets/v1/", operation.Result);
 	if (!response.Ok) return status(500, `Error uploading asset (${response.Status}): ` + response.Result);
 
-	return status(200, "Asset uploaded!");
+	return status(200);
 }
 
 async function createAsset(bearer: string | undefined, body: Uint8Array) {
@@ -204,10 +204,12 @@ async function createAsset(bearer: string | undefined, body: Uint8Array) {
 	formData.append("request", JSON.stringify(request));
 
 	const operation = await makeRequest<Operation<AssetResponse>>("https://apis.roblox.com/assets/v1/assets", "POST", formData);
-	if (!operation.Ok) return status(operation.Status, operation.Result);
+	if (!operation.Ok) return status(500, `Error starting upload (${operation.Status}): ` + operation.Result);
 
 	const response = await poll("https://apis.roblox.com/assets/v1/", operation.Result);
-	return status(200, response.Result.toString());
+	if (!response.Ok) return status(500, `Error uploading asset (${response.Status}): ` + response.Result);
+
+	return status(200);
 }
 
 const app = new Elysia({
