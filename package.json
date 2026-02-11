@@ -9,7 +9,8 @@
     "@types/bun": "latest",
     "eslint": "^10.0.0",
     "globals": "^17.3.0",
-    "typescript-eslint": "^8.54.0"
+    "jiti": "^2.6.1",
+    "typescript-eslint": "^8.55.0"
   },
   "peerDependencies": {
     "typescript": "^5"

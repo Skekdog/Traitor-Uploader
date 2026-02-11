@@ -21,7 +21,7 @@ export type Operation<Response> = {
 } | {
 	done: true,
 	response: Response,
-})
+});
 
 export function parseError(error: Record<string, any> | Record<string, any>[]): string {
 	console.log(error);
@@ -45,7 +45,7 @@ export function parseError(error: Record<string, any> | Record<string, any>[]): 
 			details = details.slice(0, -2);
 		}
 
-		return error.title;
+		return error.title + "{" + details + "}";
 	} else if (error.message) {
 		return error.message;
 	} else if (error.errors) {
@@ -64,7 +64,7 @@ export function parseError(error: Record<string, any> | Record<string, any>[]): 
 export async function makeRequest<T>(url: string, method?: HTTPMethod, body?: BodyInit, contentType?: string): Promise<RequestResponse<T>> {
 	if (url.endsWith("/")) throw new Error("Must not have trailing slash...");
 
-	const headers = new Headers()
+	const headers = new Headers();
 	headers.append("x-api-key", env.ROBLOX_API_KEY);
 
 	if (contentType) headers.append("content-type", contentType);
@@ -78,26 +78,26 @@ export async function makeRequest<T>(url: string, method?: HTTPMethod, body?: Bo
 	const text = await response.text() ?? response.statusText;
 	const asObject = JSON.parse(text);
 
-	if (!response.ok) return new Promise(async (resolve) => {
-		resolve({Ok: false, Result: parseError(asObject), Status: response.status})
+	if (!response.ok) return new Promise((resolve) => {
+		resolve({Ok: false, Result: parseError(asObject), Status: response.status});
 	});
 
-	return new Promise(async (resolve) => {
-		resolve({Ok: true, Result: asObject as T, Status: response.status})
+	return new Promise((resolve) => {
+		resolve({Ok: true, Result: asObject as T, Status: response.status});
 	});
 }
 
 export async function poll<T>(basePath: string, operation: Operation<T>): Promise<RequestResponse<T>> {
 	if (!basePath.endsWith("/")) throw new Error("moron");
 
-	const response = await makeRequest<Operation<T>>(basePath + operation.path)
+	const response = await makeRequest<Operation<T>>(basePath + operation.path);
 	if (!response.Ok) {
-		return new Promise(async (resolve) => {
+		return new Promise((resolve) => {
 			resolve(response);
 		});
 	}
 
-	const result = response.Result
+	const result = response.Result;
 	if (!result.done) {
 		return new Promise((resolve) => {
 			setTimeout(() => {
@@ -106,7 +106,7 @@ export async function poll<T>(basePath: string, operation: Operation<T>): Promis
 		});
 	}
 
-	return new Promise(async (resolve) => {
+	return new Promise((resolve) => {
 		resolve({Ok: true, Status: response.Status, Result: response.Result.response!});
 	});
 }
@@ -115,5 +115,5 @@ export function createFileForm(data: Uint8Array, fileName: string, mimeType: str
 	const formData = new FormData();
 	const file = new File([data], fileName, { type: mimeType });
 	formData.append("fileContent", file);
-	return formData
+	return formData;
 }
