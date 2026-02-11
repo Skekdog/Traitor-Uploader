@@ -7,7 +7,7 @@ const PORT = 31352;
 
 const MAX_REQUEST_SIZE = 1024 * 1024 * 4; // 4MB. If anyone has a map larger than 4mb I will be very annoyed with them
 
-const test = "abc"
+const test = "abc";
 
 // These are incomplete because I don't care about the other fields
 
@@ -20,15 +20,15 @@ type AssetCreateRequest = {
 			userId: number,
 		},
 	},
-}
+};
 
 type AssetUpdateRequest = {
 	assetId: number,
-}
+};
 
 type AssetResponse = {
 	assetId: number,
-}
+};
 
 type InventoryResponse = {
 	inventoryItems: [
@@ -38,7 +38,7 @@ type InventoryResponse = {
 			},
 		}
 	]
-}
+};
 
 type AssetAuthoriseResponse = {
 	successAssetIds: number[],
@@ -48,7 +48,7 @@ type AssetAuthoriseResponse = {
 			code: string,
 		}
 	]
-}
+};
 
 const availableAssets: number[] = [];
 
@@ -61,7 +61,7 @@ const availableAssets: number[] = [];
 }
 
 async function authoriseGroup(assetId: number) {
-	const response = await net.makeRequest<AssetAuthoriseResponse>(`https://apis.roblox.com/asset-permissions-api/v1/assets/permissions`, "PATCH", JSON.stringify({
+	const response = await net.makeRequest<AssetAuthoriseResponse>("https://apis.roblox.com/asset-permissions-api/v1/assets/permissions", "PATCH", JSON.stringify({
 		subjectType: "Universe",
 		subjectId: env.UNIVERSE_ID.toString(),
 		action: "Use",
@@ -76,7 +76,7 @@ async function authoriseGroup(assetId: number) {
 
 	if (!response.Ok) return response;
 	if (response.Result.errors.length > 0) {
-		let errorResponse: net.RequestResponse<null> = {Status: 500, Ok: false, Result: net.parseError(response.Result)}
+		const errorResponse: net.RequestResponse<null> = {Status: 500, Ok: false, Result: net.parseError(response.Result)};
 		return errorResponse;
 	}
 
@@ -96,7 +96,7 @@ async function updateAsset(bearer: string | undefined, body: Uint8Array) {
 
 	const request: AssetUpdateRequest = {
 		assetId: assetId
-	}
+	};
 
 	const authoriseResponse = await authoriseGroup(assetId);
 	if (!authoriseResponse.Ok) return status(500, `Error authorising asset (${authoriseResponse.Status}): ` + authoriseResponse.Result);
@@ -144,10 +144,10 @@ async function createAsset(bearer: string | undefined, body: Uint8Array) {
 }
 
 const app = new Elysia({
-		serve: {
-			maxRequestBodySize: MAX_REQUEST_SIZE
-		}
-	})
+	serve: {
+		maxRequestBodySize: MAX_REQUEST_SIZE
+	}
+})
 	.use(bearerAuth())
 	.patch("/publish-map", async ({bearer, body}) => {
 		return updateAsset(bearer, body);
