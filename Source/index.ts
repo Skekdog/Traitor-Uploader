@@ -83,6 +83,13 @@ async function authoriseGroup(assetId: number) {
 	return response;
 }
 
+function getAvailableAssets(bearer: string | undefined) {
+	if (!bearer) return status(401, "Unauthorized");
+	if (bearer !== test) return status(403, "Forbidden");
+
+	return JSON.stringify(availableAssets);
+}
+
 async function updateAsset(bearer: string | undefined, body: Uint8Array) {
 	// The first 8 bytes are used as the asset id
 
@@ -140,6 +147,8 @@ async function createAsset(bearer: string | undefined, body: Uint8Array) {
 	const authoriseResponse = await authoriseGroup(response.Result.assetId);
 	if (!authoriseResponse.Ok) return status(500, `Error authorising asset (${authoriseResponse.Status}): ` + authoriseResponse.Result);
 
+	availableAssets.push(response.Result.assetId);
+
 	return status(200);
 }
 
@@ -149,7 +158,10 @@ const app = new Elysia({
 	}
 })
 	.use(bearerAuth())
-	.patch("/publish-map", async ({bearer, body}) => {
+	.get("/assets", ({ bearer }) => {
+		return getAvailableAssets(bearer);
+	})
+	.patch("/publish-map", async ({ bearer, body }) => {
 		return updateAsset(bearer, body);
 	}, {
 		body: t.Uint8Array(),
