@@ -161,12 +161,12 @@ const app = new Elysia({
 	.get("/assets", ({ bearer }) => {
 		return getAvailableAssets(bearer);
 	})
-	.patch("/publish-map", async ({ bearer, body }) => {
+	.patch("/assets", async ({ bearer, body }) => {
 		return updateAsset(bearer, body);
 	}, {
 		body: t.Uint8Array(),
 	})
-	.post("/publish-map", async ({ bearer, body }) => {
+	.post("/assets", async ({ bearer, body }) => {
 		return createAsset(bearer, body);
 	}, {
 		body: t.Uint8Array(),
