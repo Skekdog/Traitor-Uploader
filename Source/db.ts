@@ -37,7 +37,6 @@ export async function saveKey(key: string, userIds: number[]) {
 			const index = lines.findIndex(l => l === line);
 			if (index !== -1) {
 				lines[index] = newLine;
-				console.log("pushed");
 			}
 		} else {
 			lines.push(newLine);
