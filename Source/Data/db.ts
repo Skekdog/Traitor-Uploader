@@ -7,7 +7,7 @@ if (!await fs.exists(filePath)) {
 	await fs.writeFile(filePath, []);
 }
 
-// Each line of db is a utf8 string in the form "KEY:USERID,USERID,USERID"
+// Each line of db is a utf8 string in the form "KEY:USERID,USERID,USERID,...:ASSETID,ASSETID,ASSETID"
 
 // JS strings are utf16, but we won't use that because what
 // if we want to use a different language in the future
