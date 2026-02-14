@@ -4,6 +4,8 @@ import { env } from "./env";
 import * as net from "./net";
 import * as db from "./db";
 
+const KEY_ASSET_LIMIT = 5;
+
 // Some general notes:
 // Private assets can still be viewed by anyone - meaning the description is not a secure place to store data
 // Initially I *kinda* wanted to store the key there and authorise updates by checking that key, but that had
@@ -92,10 +94,10 @@ async function authoriseGroup(assetId: number) {
 	return response;
 }
 
-function getAvailableAssets(bearer: string | undefined) {
+async function getAvailableAssets(bearer: string | undefined) {
 	if (!bearer) return status(401);
 
-	const assets = db.getAuthorisedAssets(bearer);
+	const assets = await db.getAuthorisedAssets(bearer);
 	if (assets === undefined) return status(401);
 
 	return JSON.stringify(assets);
@@ -106,7 +108,7 @@ async function getAssetContent(bearer: string | undefined, assetId: number) {
 
 	if (!bearer) return status(401);
 
-	if (!(assetId in db.getAuthorisedAssets(bearer))) return status(403);
+	if (!(assetId in (await db.getAuthorisedAssets(bearer) ?? []))) return status(403);
 
 	const locationRequestHeaders = new Headers();
 	locationRequestHeaders.append("AssetType", "Model");
@@ -149,7 +151,7 @@ async function updateAsset(bearer: string | undefined, body: Uint8Array) {
 	const assetId = new DataView(body.slice(0, 8).buffer, 0, 8).getFloat64(0, true);
 	const assetContent = body.slice(8);
 
-	if (!(assetId in db.getAuthorisedAssets(bearer))) return status(403);
+	if (!(assetId in (await db.getAuthorisedAssets(bearer) ?? []))) return status(403);
 
 	const formData = net.createFileForm(assetContent, "asset.rbxm", "model/x-rbxm");
 
@@ -174,6 +176,9 @@ async function updateAsset(bearer: string | undefined, body: Uint8Array) {
 
 async function createAsset(bearer: string | undefined, body: Uint8Array) {
 	if (!bearer) return status(401);
+
+	const authorisedAssets = await db.getAuthorisedAssets(bearer);
+	if ((authorisedAssets?.length ?? 0) >= KEY_ASSET_LIMIT) return status(402);
 
 	const formData = net.createFileForm(body, "asset.rbxm", "model/x-rbxm");
 
