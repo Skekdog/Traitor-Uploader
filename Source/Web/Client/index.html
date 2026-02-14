@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<meta charset='utf-8'>
+	<title>Traitor Uploader</title>
+	<meta name="robots" content="noindex" />
+	<meta name="color-scheme" content="light dark" />
+	<link rel="icon" type="image/png" href="./logo.svg" />
+	<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.jade.min.css" />
+</head>
+
+<body>
+	<main class="container">
+		<form name="message-form" action="javascript:void(0);">
+			<fieldset>
+				<label for="password-input">Password</label>
+				<input id="password-input" type="password" required />
+			</fieldset>
+
+			<button id="password-button" type="submit">Submit</button>
+		</form>
+
+		<table id="table">
+            <tr>
+                <th>Key</th>
+                <th>Users</th>
+                <th>Assets</th>
+            </tr>
+            <tr>
+                <td><button id="new-entry">+</button></td>
+            </tr>
+        </table>
+	</main>
+
+	<script type="module" src="./page.ts"></script>
+</body>
+
+</html>

@@ -1,6 +1,6 @@
 {
   "name": "traitor-uploader",
-  "module": "Source/Server/index.ts",
+  "module": "Source/index",
   "type": "module",
   "private": true,
   "devDependencies": {
@@ -17,6 +17,7 @@
   },
   "dependencies": {
     "@elysiajs/bearer": "^1.4.3",
+    "@elysiajs/static": "^1.4.7",
     "elysia": "^1.4.22"
   }
 }
