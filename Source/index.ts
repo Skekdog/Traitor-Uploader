@@ -104,7 +104,9 @@ function getAvailableAssets(bearer: string | undefined) {
 async function getAssetContent(bearer: string | undefined, assetId: number) {
 	// The first 8 bytes are the asset id
 
-	if (!bearer) return status(401, "Unauthorized");
+	if (!bearer) return status(401);
+
+	if (!(assetId in db.getAuthorisedAssets(bearer))) return status(403);
 
 	const locationRequestHeaders = new Headers();
 	locationRequestHeaders.append("AssetType", "Model");
@@ -140,13 +142,14 @@ async function updateAsset(bearer: string | undefined, body: Uint8Array) {
 	if (!bearer) return status(401);
 
 	const users = await db.getUsers(bearer);
-	console.log(bearer);
 	if (!users) return status(401);
 
 	const description = users.join(",");
 
 	const assetId = new DataView(body.slice(0, 8).buffer, 0, 8).getFloat64(0, true);
 	const assetContent = body.slice(8);
+
+	if (!(assetId in db.getAuthorisedAssets(bearer))) return status(403);
 
 	const formData = net.createFileForm(assetContent, "asset.rbxm", "model/x-rbxm");
 
