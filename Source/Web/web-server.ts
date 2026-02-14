@@ -66,4 +66,5 @@ export const app = new Elysia()
 
 export type Web = typeof app;
 
+console.log("Ready!");
 console.log(`Server starting at ${app.server?.hostname}:${app.server?.port}`);
