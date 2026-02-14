@@ -47,6 +47,20 @@ function createTableInput(id: string, value: string, enabled: boolean, parent: N
 	return input;
 }
 
+function createTableButton(id: string, value: string, enabled: boolean, parent: Node) {
+	const cell = document.createElement("td");
+
+	const input = document.createElement("button");
+	input.id = id;
+	input.innerHTML = value;
+	input.disabled = !enabled;
+
+	cell.appendChild(input);
+	parent.appendChild(cell);
+
+	return input;
+}
+
 async function updateKey(e: Event, key: string, field: "assetIds" | "userIds") {
 	const input = e.target as HTMLInputElement;
 
@@ -59,14 +73,24 @@ async function updateKey(e: Event, key: string, field: "assetIds" | "userIds") {
 		}
 	}
 
-	const response = await app.key.patch({
-		key: key,
+	const response = await app.key({key: key}).patch({
 		[field]: ids,
 	}, {
 		headers: getHeaders(),
 	});
 
 	if (response.error) return alert(response.error.value);
+}
+
+async function deleteKey(key: string) {
+	const response = await app.key({key: encodeURIComponent(key)}).delete(undefined, {
+		headers: getHeaders(),
+	});
+
+	if (response.error) return alert(response.error.value);
+
+	const row = document.getElementById("row-" + key);
+	row?.remove();
 }
 
 function createTableElement(key: string, data: {userIds: string, assetIds: string}) {
@@ -77,10 +101,13 @@ function createTableElement(key: string, data: {userIds: string, assetIds: strin
 	createTableInput("key-" + key, key, false, row);
 
 	createTableInput("userIds-" + key, data.userIds, true, row)
-		.addEventListener("focusout", async (e) => updateKey(e, key, "userIds"));
+		.addEventListener("focusout", async e => updateKey(e, key, "userIds"));
 
 	createTableInput("assetIds-" + key, data.assetIds, true, row)
-		.addEventListener("focusout", async (e) => updateKey(e, key, "assetIds"));
+		.addEventListener("focusout", async e => updateKey(e, key, "assetIds"));
+
+	createTableButton("delete-" + key, "-", true, row)
+		.addEventListener("click", () => deleteKey(key));
 
 	table.children[0]?.insertAdjacentElement("afterend", row);
 }

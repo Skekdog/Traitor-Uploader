@@ -2,7 +2,7 @@ import { bearer as bearerAuth } from "@elysiajs/bearer";
 import staticPlugin from "@elysiajs/static";
 import Elysia, { status, t } from "elysia";
 import { env } from "../env";
-import { doesKeyExist, getAllKeys, saveKey } from "../Data/db";
+import { deleteKey, doesKeyExist, getAllKeys, saveKey } from "../Data/db";
 import { generate } from "../Data/key";
 import { KEY_ASSET_LIMIT } from "../Server/backend-server";
 
@@ -31,21 +31,35 @@ export const app = new Elysia()
 
 		return status(200, key);
 	})
-	.patch("/key", async ({ bearer, body }) => {
+	.patch("/key/:key", async ({ bearer, body, params: { key } }) => {
 		if (!bearer) return status(401);
 		if (bearer !== env.WEB_PASSWORD) return status(403);
 
-		if (!await doesKeyExist(body.key)) return status(404);
+		console.log(key);
+		if (!await doesKeyExist(key)) return status(404);
 
 		if ((body.assetIds ?? []).length > KEY_ASSET_LIMIT) return status(400);
 
-		await saveKey(body.key, body.userIds ?? [], body.assetIds ?? []);
+		await saveKey(key, body.userIds ?? [], body.assetIds ?? []);
+
+		return status(200);
 	}, {
 		body: t.Object({
-			key: t.String(),
 			userIds: t.Optional(t.Array(t.Number())),
 			assetIds: t.Optional(t.Array(t.Number())),
 		})
+	})
+	.delete("/key/:key", async ({ bearer, params: { key } }) => {
+		if (!bearer) return status(401);
+		if (bearer !== env.WEB_PASSWORD) return status(403);
+
+		if (!await doesKeyExist(key)) return status(404);
+
+		await deleteKey(key);
+
+		console.log("done");
+
+		return status(200);
 	})
 	.listen(PORT);
 

@@ -48,6 +48,24 @@ export async function saveKey(key: string, userIds: number[], authorisedAssets: 
 	});
 }
 
+export async function deleteKey(key: string): Promise<void> {
+	return new Promise(resolve => {
+		if (!isValidKey(key)) return resolve();
+
+		void fs.readFile(filePath, "utf8").then(text => {
+			const finalLines: string[] = [];
+			const lines = text.split("\n");
+			lines.forEach(line => {
+				if (line.split(":")[0] !== key) finalLines.push(line);
+			});
+
+			resolve();
+
+			return fs.writeFile(filePath, finalLines.join("\n"));
+		});
+	});
+}
+
 export async function getUsers(key: string): Promise<number[] | undefined> {
 	return new Promise(resolve => {
 		if (!isValidKey(key)) return resolve(undefined);
