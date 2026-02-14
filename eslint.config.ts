@@ -71,4 +71,17 @@ export default defineConfig([
 			"no-unused-vars": ["off"],
 		},
 	},
+	{
+		files: ["./Source/Web/Client/*.{js,mjs,cjs,ts,mts,cts}"],
+		languageOptions: {
+			globals: globals.browser
+		},
+		rules: {
+			"@typescript-eslint/no-unsafe-assignment": "off",
+			"@typescript-eslint/no-unsafe-call": "off",
+			"@typescript-eslint/no-unsafe-member-access": "off",
+			"@typescript-eslint/no-redundant-type-constituents": "off",
+			"@typescript-eslint/no-unnecessary-type-assertion": "off",
+		}
+	}
 ]);

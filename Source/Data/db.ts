@@ -1,5 +1,6 @@
 import * as fs from "node:fs/promises";
 import { isValidKey } from "./key";
+import assert from "../Util/assert";
 
 const filePath = "db.txt";
 
@@ -91,6 +92,28 @@ export async function doesKeyExist(key: string): Promise<boolean> {
 
 		void fs.readFile(filePath, "utf8").then(text => {
 			return resolve(!!getKeyLine(key, text));
+		});
+	});
+}
+
+export async function getAllKeys(): Promise<{[key: string]: {userIds: string, assetIds: string}}> {
+	return new Promise(resolve => {
+		void fs.readFile(filePath, "utf8").then(text => {
+			const result: {[key: string]: {userIds: string, assetIds: string}} = {};
+			const lines = text.split("\n");
+			lines.forEach(line => {
+				const split = line.split(":");
+
+				const key = split[0];
+				if (!key) return;
+
+				const userIds = assert(split[1]);
+				const assetIds = assert(split[2]);
+
+				result[key] = {userIds: userIds, assetIds: assetIds};
+			});
+
+			resolve(result);
 		});
 	});
 }

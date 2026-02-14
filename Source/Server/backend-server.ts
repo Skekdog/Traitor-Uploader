@@ -4,7 +4,7 @@ import { env } from "../env";
 import * as net from "./net";
 import * as db from "../Data/db";
 
-const KEY_ASSET_LIMIT = 5;
+export const KEY_ASSET_LIMIT = 5;
 
 // Some general notes:
 // Private assets can still be viewed by anyone - meaning the description is not a secure place to store data
