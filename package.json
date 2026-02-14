@@ -1,6 +1,6 @@
 {
   "name": "traitor-uploader",
-  "module": "Source/index.ts",
+  "module": "Source/Server/index.ts",
   "type": "module",
   "private": true,
   "devDependencies": {

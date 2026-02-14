@@ -1,6 +1,6 @@
 import type { BodyInit } from "bun";
 import type { HTTPMethod } from "elysia";
-import { env } from "./env";
+import { env } from "../env";
 
 export type RequestResponse<T> = {
 	Raw: Response,
