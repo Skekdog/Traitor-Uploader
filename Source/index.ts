@@ -2,12 +2,16 @@ import { bearer as bearerAuth } from "@elysiajs/bearer";
 import Elysia, { status, t } from "elysia";
 import { env } from "./env";
 import * as net from "./net";
+import * as db from "./db";
+
+// Some general notes:
+// Private assets can still be viewed by anyone - meaning the description is not a secure place to store data
+// Initially I *kinda* wanted to store the key there and authorise updates by checking that key, but that had
+// bad vibes and sure enough its not secure. Also, the rate-limit for fetching asset descriptions is very tight.
 
 const PORT = 31352;
 
 const MAX_REQUEST_SIZE = 1024 * 1024 * 4; // 4MB. If anyone has a map larger than 4mb I will be very annoyed with them
-
-const test = "abc";
 
 // These are incomplete because I don't care about the other fields
 
@@ -24,6 +28,7 @@ type AssetCreateRequest = {
 
 type AssetUpdateRequest = {
 	assetId: number,
+	description: string,
 };
 
 type AssetResponse = {
@@ -89,7 +94,6 @@ async function authoriseGroup(assetId: number) {
 
 function getAvailableAssets(bearer: string | undefined) {
 	if (!bearer) return status(401, "Unauthorized");
-	if (bearer !== test) return status(403, "Forbidden");
 
 	return JSON.stringify(availableAssets);
 }
@@ -98,7 +102,6 @@ async function getAssetContent(bearer: string | undefined, assetId: number) {
 	// The first 8 bytes are the asset id
 
 	if (!bearer) return status(401, "Unauthorized");
-	if (bearer !== test) return status(403, "Forbidden");
 
 	const locationRequestHeaders = new Headers();
 	locationRequestHeaders.append("AssetType", "Model");
@@ -131,8 +134,13 @@ async function getAssetContent(bearer: string | undefined, assetId: number) {
 async function updateAsset(bearer: string | undefined, body: Uint8Array) {
 	// The first 8 bytes are used as the asset id
 
-	if (!bearer) return status(401, "Unauthorized");
-	if (bearer !== test) return status(403, "Forbidden");
+	if (!bearer) return status(401);
+
+	const users = await db.getUsers(bearer);
+	console.log(bearer);
+	if (!users) return status(401);
+
+	const description = users.join(",");
 
 	const assetId = new DataView(body.slice(0, 8).buffer, 0, 8).getFloat64(0, true);
 	const assetContent = body.slice(8);
@@ -140,7 +148,8 @@ async function updateAsset(bearer: string | undefined, body: Uint8Array) {
 	const formData = net.createFileForm(assetContent, "asset.rbxm", "model/x-rbxm");
 
 	const request: AssetUpdateRequest = {
-		assetId: assetId
+		assetId: assetId,
+		description: description,
 	};
 
 	const authoriseResponse = await authoriseGroup(assetId);
@@ -148,7 +157,7 @@ async function updateAsset(bearer: string | undefined, body: Uint8Array) {
 
 	formData.append("request", JSON.stringify(request));
 
-	const operation = await net.makeRequest<net.Operation<AssetResponse>>(`https://apis.roblox.com/assets/v1/assets/${assetId}`, "PATCH", formData);
+	const operation = await net.makeRequest<net.Operation<AssetResponse>>(`https://apis.roblox.com/assets/v1/assets/${assetId}?updateMask=description`, "PATCH", formData);
 	if (!operation.Ok) return status(500, `Error starting upload (${operation.Status}): ` + operation.Result);
 
 	const response = await net.poll("https://apis.roblox.com/assets/v1/", operation.Result);
@@ -158,15 +167,19 @@ async function updateAsset(bearer: string | undefined, body: Uint8Array) {
 }
 
 async function createAsset(bearer: string | undefined, body: Uint8Array) {
-	if (!bearer) return status(401, "Unauthorized");
-	if (bearer !== test) return status(403, "Forbidden");
+	if (!bearer) return status(401);
 
 	const formData = net.createFileForm(body, "asset.rbxm", "model/x-rbxm");
+
+	const users = await db.getUsers(bearer);
+	if (!users) return status(401);
+
+	const description = users.join(",");
 
 	const request: AssetCreateRequest = {
 		assetType: "Model",
 		displayName: "User Upload " + availableAssets.length,
-		description: "Test description",
+		description: description,
 		creationContext: {
 			creator: {
 				userId: env.UPLOADER_ACCOUNT_ID,
