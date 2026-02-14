@@ -98,7 +98,7 @@ async function getAvailableAssets(bearer: string | undefined) {
 	if (!bearer) return status(401);
 
 	const assets = await db.getAuthorisedAssets(bearer);
-	if (assets === undefined) return status(401);
+	if (assets === undefined) return status(403);
 
 	return JSON.stringify(assets);
 }
@@ -144,7 +144,7 @@ async function updateAsset(bearer: string | undefined, body: Uint8Array) {
 	if (!bearer) return status(401);
 
 	const users = await db.getUsers(bearer);
-	if (!users) return status(401);
+	if (!users) return status(403);
 
 	const description = users.join(",");
 
@@ -183,7 +183,7 @@ async function createAsset(bearer: string | undefined, body: Uint8Array) {
 	const formData = net.createFileForm(body, "asset.rbxm", "model/x-rbxm");
 
 	const users = await db.getUsers(bearer);
-	if (!users) return status(401);
+	if (!users) return status(403);
 
 	const description = users.join(",");
 

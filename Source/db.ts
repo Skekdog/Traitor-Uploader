@@ -1,4 +1,5 @@
 import * as fs from "node:fs/promises";
+import { isValidKey } from "./key";
 
 const filePath = "db.txt";
 
@@ -21,8 +22,8 @@ function getKeyLine(key: string, text: string): string | undefined {
 	return line;
 }
 
-export async function saveKey(key: string, userIds: number[], authorisedAssets: number[]) {
-	atob(key);
+export async function saveKey(key: string, userIds: number[], authorisedAssets: number[]): Promise<void> {
+	if (!isValidKey(key)) return new Promise(reject => reject());
 
 	let fileText: string;
 	return fs.readFile(filePath, "utf8").then(text => {
@@ -48,7 +49,7 @@ export async function saveKey(key: string, userIds: number[], authorisedAssets: 
 
 export async function getUsers(key: string): Promise<number[] | undefined> {
 	return new Promise(resolve => {
-		atob(key);
+		if (!isValidKey(key)) return resolve(undefined);
 
 		fs.readFile(filePath, "utf8").then(text => {
 			return getKeyLine(key, text);
@@ -67,7 +68,7 @@ export async function getUsers(key: string): Promise<number[] | undefined> {
 
 export async function getAuthorisedAssets(key: string): Promise<number[] | undefined> {
 	return new Promise(resolve => {
-		atob(key);
+		if (!isValidKey(key)) return resolve(undefined);
 
 		fs.readFile(filePath, "utf8").then(text => {
 			return getKeyLine(key, text);
