@@ -25,7 +25,6 @@ export type Operation<Response> = {
 });
 
 export function parseError(error: Record<string, any> | Record<string, any>[]): string {
-	console.log(error);
 	if (typeof error !== "object") return JSON.stringify(error);
 
 	if (Array.isArray(error)) {

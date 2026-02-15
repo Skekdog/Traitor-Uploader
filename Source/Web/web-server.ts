@@ -36,7 +36,6 @@ export const app = new Elysia()
 		if (!bearer) return status(401);
 		if (bearer !== env.WEB_PASSWORD) return status(403);
 
-		console.log(key);
 		if (!await doesKeyExist(key)) return status(404);
 
 		if ((body.assetIds ?? []).length > KEY_ASSET_LIMIT) return status(400);
@@ -57,8 +56,6 @@ export const app = new Elysia()
 		if (!await doesKeyExist(key)) return status(404);
 
 		await deleteKey(key);
-
-		console.log("done");
 
 		return status(200);
 	})
