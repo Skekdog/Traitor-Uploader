@@ -13,6 +13,25 @@ export const KEY_ASSET_LIMIT = 5;
 
 const MAX_REQUEST_SIZE = 1024 * 1024 * 4; // 4MB. If anyone has a map larger than 4mb I will be very annoyed with them
 
+const RATE_LIMIT_COUNT = 2;
+const RATE_LIMIT_INTERVAL = 60_000; // in ms
+
+const rateLimits: {[key: string]: {requests: number, firstRequestAt: number} | undefined} = {};
+
+function rateLimit(key: string): boolean {
+	const limit = rateLimits[key];
+	if (!limit || (performance.now() - limit.firstRequestAt > RATE_LIMIT_INTERVAL)) {
+		rateLimits[key] = {requests: 1, firstRequestAt: performance.now()};
+		return true;
+	}
+
+	if (limit.requests >= RATE_LIMIT_COUNT) return false;
+
+	limit.requests += 1;
+
+	return true;
+}
+
 // These are incomplete because I don't care about the other fields
 
 type AssetCreateRequest = {
@@ -108,6 +127,8 @@ async function getAssetContent(bearer: string | undefined, assetId: number) {
 
 	if (!(assetId in (await db.getAuthorisedAssets(bearer) ?? []))) return status(403);
 
+	if (!rateLimit(bearer)) return status(429);
+
 	const locationRequestHeaders = new Headers();
 	locationRequestHeaders.append("AssetType", "Model");
 
@@ -143,6 +164,8 @@ async function updateAsset(bearer: string | undefined, body: Uint8Array) {
 
 	const users = await db.getUsers(bearer);
 	if (!users) return status(403);
+
+	if (!rateLimit(bearer)) return status(429);
 
 	const description = users.join(",");
 
@@ -182,6 +205,8 @@ async function createAsset(bearer: string | undefined, body: Uint8Array) {
 
 	const users = await db.getUsers(bearer);
 	if (!users) return status(403);
+
+	if (!rateLimit(bearer)) return status(429);
 
 	const description = users.join(",");
 
