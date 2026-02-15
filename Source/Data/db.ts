@@ -96,7 +96,8 @@ export async function getAuthorisedAssets(key: string): Promise<number[] | undef
 
 			const authorisedAssets: number[] = [];
 			line.split(":")[2]?.split(",").forEach(id => {
-				authorisedAssets.push(Number.parseInt(id));
+				const num = Number.parseInt(id);
+				if (Number.isFinite(num)) authorisedAssets.push(num);
 			});
 
 			resolve(authorisedAssets);
