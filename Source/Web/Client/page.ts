@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-misused-promises */
+
 import { treaty } from "@elysiajs/eden";
 import type { Web } from "../web-server";
 
@@ -38,7 +40,7 @@ function createTableInput(id: string, value: string, enabled: boolean, parent: N
 	const input = document.createElement("input");
 	input.id = id;
 	input.value = value;
-	input.disabled = !enabled;
+	input.readOnly = !enabled;
 	input.type = "text";
 
 	cell.appendChild(input);
