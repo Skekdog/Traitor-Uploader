@@ -125,7 +125,7 @@ async function getAssetContent(bearer: string | undefined, assetId: number) {
 
 	if (!bearer) return status(401);
 
-	if (!(assetId in (await db.getAuthorisedAssets(bearer) ?? []))) return status(403);
+	if (!((await db.getAuthorisedAssets(bearer) ?? []).find(value => value === assetId))) return status(403);
 
 	if (!rateLimit(bearer)) return status(429);
 
