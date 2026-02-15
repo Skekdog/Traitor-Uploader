@@ -238,6 +238,10 @@ async function createAsset(bearer: string | undefined, body: Uint8Array) {
 
 	availableAssets.push(response.Result.assetId);
 
+	const newAssets = await db.getAuthorisedAssets(bearer) ?? [];
+	newAssets.push(response.Result.assetId);
+	await db.saveKey(bearer, await db.getUsers(bearer) ?? [], newAssets);
+
 	return JSON.stringify(response.Result.assetId);
 }
 
