@@ -1,21 +1,16 @@
 import { bearer as bearerAuth } from "@elysiajs/bearer";
-import staticPlugin from "@elysiajs/static";
 import Elysia, { status, t } from "elysia";
 import { env } from "../env";
 import { deleteKey, doesKeyExist, getAllKeys, getAuthorisedAssets, getUsers, saveKey } from "../Data/db";
 import { generate } from "../Data/key";
 import { backend, KEY_ASSET_LIMIT } from "../Server/backend-server";
+import index from "./Client/index.html";
 
 const PORT = env.PORT;
 
 export const app = new Elysia()
 	.use(backend)
-	.use(
-		await staticPlugin({
-			assets: "./Source/Web/Client",
-			prefix: "/",
-		})
-	)
+	.get("/", index)
 	.use(bearerAuth())
 	.get("/key", async ({ bearer }) => {
 		if (!bearer) return status(401);
