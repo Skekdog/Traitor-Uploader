@@ -115,16 +115,16 @@ async function getAvailableAssets(bearer: string | undefined) {
 	if (!bearer) return status(401);
 
 	const assets = await db.getAuthorisedAssets(bearer);
-	if (assets === undefined) return status(403);
+	if (assets === null) return status(403);
 
 	return JSON.stringify(assets);
 }
 
-async function isAssetAuthorised(bearer: string, assetId: number) {
+async function isAssetAuthorised(bearer: string, assetId: string) {
 	return (await db.getAuthorisedAssets(bearer) ?? []).find(value => value === assetId) !== undefined;
 }
 
-async function getAssetContent(bearer: string | undefined, assetId: number) {
+async function getAssetContent(bearer: string | undefined, assetId: string) {
 	// The first 8 bytes are the asset id
 
 	if (!bearer) return status(401);
@@ -171,12 +171,12 @@ async function updateAsset(bearer: string | undefined, body: Uint8Array) {
 
 	if (!rateLimit(bearer)) return status(429);
 
-	const description = users.join(",");
+	const description = users.map((value) => value.robloxUserId).join(",");
 
 	const assetId = new DataView(body.slice(0, 8).buffer, 0, 8).getFloat64(0, true);
 	const assetContent = body.slice(8);
 
-	if (!await isAssetAuthorised(bearer, assetId)) return status(403);
+	if (!await isAssetAuthorised(bearer, assetId.toString())) return status(403);
 
 	const formData = net.createFileForm(assetContent, "asset.rbxm", "model/x-rbxm");
 
@@ -212,7 +212,7 @@ async function createAsset(bearer: string | undefined, body: Uint8Array) {
 
 	if (!rateLimit(bearer)) return status(429);
 
-	const description = users.join(",");
+	const description = users.map((value) => value.robloxUserId).join(",");
 
 	const request: AssetCreateRequest = {
 		assetType: "Model",
@@ -239,8 +239,10 @@ async function createAsset(bearer: string | undefined, body: Uint8Array) {
 	availableAssets.push(response.Result.assetId);
 
 	const newAssets = await db.getAuthorisedAssets(bearer) ?? [];
-	newAssets.push(response.Result.assetId);
-	await db.saveKey(bearer, await db.getUsers(bearer) ?? [], newAssets);
+	newAssets.push(response.Result.assetId.toString());
+
+	const queriedUsers = await db.getUsers(bearer) ?? [];
+	await db.saveKey(bearer, queriedUsers.map((value) => value.robloxUserId), newAssets);
 
 	return JSON.stringify(response.Result.assetId);
 }
@@ -256,7 +258,7 @@ export const backend = new Elysia({
 		return getAvailableAssets(bearer);
 	})
 	.get("/asset-content/:assetId", ({ bearer, params: { assetId } }) => {
-		return getAssetContent(bearer, Number.parseInt(assetId));
+		return getAssetContent(bearer, assetId);
 	})
 	.patch("/assets", async ({ bearer, body }) => {
 		return updateAsset(bearer, body);

@@ -1,141 +1,169 @@
-import * as fs from "node:fs/promises";
+import { drizzle } from "drizzle-orm/libsql/node";
+import * as schema from "./schema";
 import { isValidKey } from "./key";
-import assert from "../Util/assert";
+import { eq } from "drizzle-orm";
 
-const filePath = "db.txt";
+export const db = drizzle("file:db.sqlite", {
+	relations: schema.relations,
+	schema: schema,
+});
 
-if (!await fs.exists(filePath)) {
-	await fs.writeFile(filePath, []);
-}
+export async function doesKeyExist(key: string): Promise<boolean> {
+	if (!isValidKey(key)) return false;
 
-// Each line of db is a utf8 string in the form "KEY:USERID,USERID,USERID,...:ASSETID,ASSETID,ASSETID"
-
-// JS strings are utf16, but we won't use that because what
-// if we want to use a different language in the future
-// (and also utf8 strings are shorter in this case, yay efficiency)
-
-function getKeyLine(key: string, text: string): string | undefined {
-	const lines = text.split("\n");
-	const line = lines.find((value) => {
-		return value.split(":")[0] === key;
+	const queriedKey = await db.query.keyTable.findFirst({
+		where: {
+			key: key,
+		},
 	});
 
-	return line;
+	if (!queriedKey) return false;
+
+	return true;
 }
 
-export async function saveKey(key: string, userIds: number[], authorisedAssets: number[]): Promise<void> {
-	if (!isValidKey(key)) return new Promise(reject => reject());
+export async function createUserIfNotExists(
+	robloxUserId: string,
+) {
+	return await db.insert(schema.userTable).values({
+		robloxUserId: robloxUserId,
+	}).onConflictDoNothing();
+}
 
-	let fileText: string;
-	return fs.readFile(filePath, "utf8").then(text => {
-		fileText = text;
-		return getKeyLine(key, text);
-	}).then(line => {
-		const lines = fileText.split("\n");
-		if (lines[0] === "") lines.shift();
+async function getManyUsers(robloxUserIds: string[]): Promise<schema.User[]> {
+	const users = new Set<schema.User>();
 
-		const newLine = key + ":" + userIds.join(",") + ":" + authorisedAssets.join(",");
-		if (line) {
-			const index = lines.findIndex(l => l === line);
-			if (index !== -1) {
-				lines[index] = newLine;
-			}
-		} else {
-			lines.push(newLine);
+	for (const userId of robloxUserIds) {
+		const queriedUser = await db.query.userTable.findFirst({
+			where: {
+				robloxUserId: userId,
+			},
+		});
+
+		if (!queriedUser) {
+			console.warn(`user with the roblox id of ${userId} does not exist`);
+			continue;
 		}
 
-		return fs.writeFile(filePath, lines.join("\n"));
+		users.add(queriedUser);
+	}
+
+	return [...users];
+}
+
+export async function saveNewKey(key: string): Promise<string> {
+	return db.transaction(async tx => {
+		const [group] = await tx
+			.insert(schema.groupTable)
+			.values({
+				name: `Key Group ${key}`,
+			})
+			.returning();
+
+		const groupId = group!.id;
+
+		await tx.insert(schema.keyTable).values({
+			key,
+			ownerId: groupId,
+		});
+
+		return groupId;
+	});
+}
+
+export async function saveKey(
+	key: string,
+	userIds: string[],
+	authorisedAssets: string[],
+): Promise<void> {
+	for (const userId of userIds) {
+		await createUserIfNotExists(userId);
+	}
+
+	const users = await getManyUsers(userIds.map((value) => value.toString()));
+
+	await db.transaction(async (tx) => {
+		const existingKey = await tx.query.keyTable.findFirst({
+			where: {
+				key: key,
+			},
+		});
+
+		if (!existingKey) throw new Error("key does not exist, use saveNewKey() first");
+
+		const groupId = existingKey.ownerId;
+
+		await tx
+			.insert(schema.userToGroupTable)
+			.values(
+				users.map((user) => ({
+					userId: user.id,
+					groupId,
+				})),
+			)
+			.onConflictDoNothing();
+
+		await tx.delete(schema.assetTable).where(eq(schema.assetTable.key, key));
+
+		if (authorisedAssets.length > 0) {
+			await tx.insert(schema.assetTable).values(
+				authorisedAssets.map((assetId) => ({
+					robloxId: assetId.toString(),
+					key,
+				})),
+			).onConflictDoNothing();
+		}
 	});
 }
 
 export async function deleteKey(key: string): Promise<void> {
-	return new Promise(resolve => {
-		if (!isValidKey(key)) return resolve();
+	if (!isValidKey(key)) return;
 
-		void fs.readFile(filePath, "utf8").then(text => {
-			const finalLines: string[] = [];
-			const lines = text.split("\n");
-			lines.forEach(line => {
-				if (line.split(":")[0] !== key) finalLines.push(line);
-			});
+	await db.delete(schema.keyTable).where(eq(schema.keyTable.key, key));
 
-			resolve();
-
-			return fs.writeFile(filePath, finalLines.join("\n"));
-		});
-	});
+	return;
 }
 
-export async function getUsers(key: string): Promise<number[] | undefined> {
-	return new Promise(resolve => {
-		if (!isValidKey(key)) return resolve(undefined);
-
-		void fs.readFile(filePath, "utf8").then(text => {
-			return getKeyLine(key, text);
-		}).then(line => {
-			if (!line) return resolve(undefined);
-
-			const users: number[] = [];
-			line.split(":")[1]?.split(",").forEach(id => {
-				users.push(Number.parseInt(id));
-			});
-
-			resolve(users);
-		});
-	});
+export async function getAllKeys(): Promise<schema.Key[]> {
+	return await db.query.keyTable.findMany();
 }
 
-export async function getAuthorisedAssets(key: string): Promise<number[] | undefined> {
-	return new Promise(resolve => {
-		if (!isValidKey(key)) return resolve(undefined);
+export async function getAuthorisedAssets(
+	key: string,
+): Promise<string[] | null> {
+	if (!isValidKey(key)) return null;
 
-		void fs.readFile(filePath, "utf8").then(text => {
-			return getKeyLine(key, text);
-		}).then(line => {
-			if (!line) return resolve(undefined);
-
-			const authorisedAssets: number[] = [];
-			line.split(":")[2]?.split(",").forEach(id => {
-				const num = Number.parseInt(id);
-				if (Number.isFinite(num)) authorisedAssets.push(num);
-			});
-
-			resolve(authorisedAssets);
-		});
+	const queriedKey = await db.query.keyTable.findFirst({
+		where: {
+			key: key,
+		},
 	});
+
+	if (!queriedKey) return null;
+
+	const assets = await db.query.assetTable.findMany({
+		where: {
+			owner: {
+				key: queriedKey.key,
+			},
+		},
+	});
+
+	return assets.map((value) => value.robloxId);
 }
 
-export async function doesKeyExist(key: string): Promise<boolean> {
-	return new Promise(resolve => {
-		if (!isValidKey(key)) return resolve(false);
+export async function getUsers(key: string) {
+	if (!isValidKey(key)) return null;
 
-		void fs.readFile(filePath, "utf8").then(text => {
-			return resolve(!!getKeyLine(key, text));
-		});
+	const users = await db.query.userTable.findMany({
+		where: {
+			groups: {
+				keys: {
+					key: key,
+				},
+			},
+		},
 	});
-}
 
-export async function getAllKeys(): Promise<{[key: string]: {userIds: string, assetIds: string}}> {
-	return new Promise(resolve => {
-		void fs.readFile(filePath, "utf8").then(text => {
-			const result: {[key: string]: {userIds: string, assetIds: string}} = {};
-			const lines = text.split("\n");
-			lines.forEach(line => {
-				const split = line.split(":");
-
-				const key = split[0];
-				if (!key) return;
-
-				const userIds = split[1] as string;
-				assert(userIds !== undefined);
-
-				const assetIds = split[2] as string;
-				assert(assetIds !== undefined);
-
-				result[key] = {userIds: userIds, assetIds: assetIds};
-			});
-
-			resolve(result);
-		});
-	});
+	return users;
 }
