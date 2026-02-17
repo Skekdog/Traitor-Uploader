@@ -85,6 +85,9 @@ async function updateKey(e: Event, key: string, field: "assetIds" | "userIds") {
 }
 
 async function deleteKey(key: string) {
+	const confirmation = confirm("Are you sure you want to delete this key?");
+	if (!confirmation) return;
+
 	const response = await app.key({key: encodeURIComponent(key)}).delete(undefined, {
 		headers: getHeaders(),
 	});
