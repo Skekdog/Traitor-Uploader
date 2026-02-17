@@ -2,7 +2,7 @@ import { bearer as bearerAuth } from "@elysiajs/bearer";
 import Elysia, { status, t } from "elysia";
 import { env } from "../env";
 import * as net from "./net";
-import * as db from "../Data/db";
+import * as db from "../Data/txt-db";
 
 export const KEY_ASSET_LIMIT = 5;
 

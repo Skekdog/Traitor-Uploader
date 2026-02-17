@@ -1,7 +1,7 @@
 import { bearer as bearerAuth } from "@elysiajs/bearer";
 import Elysia, { status, t } from "elysia";
 import { env } from "../env";
-import { deleteKey, doesKeyExist, getAllKeys, getAuthorisedAssets, getUsers, saveKey } from "../Data/db";
+import { deleteKey, doesKeyExist, getAllKeys, getAuthorisedAssets, getUsers, saveKey } from "../Data/txt-db";
 import { generate } from "../Data/key";
 import { backend, KEY_ASSET_LIMIT } from "../Server/backend-server";
 import index from "./Client/index.html";
