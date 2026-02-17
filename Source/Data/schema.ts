@@ -2,12 +2,12 @@
 // eslint is for some reason absolutely scared senseless of drizzle, but its FINE.
 import { defineRelations } from "drizzle-orm";
 import { primaryKey, sqliteTable, text } from "drizzle-orm/sqlite-core";
-import { nanoid } from "nanoid";
+import { generateId } from "../Util/id";
 
 export const userTable = sqliteTable("users", {
 	id: text("id")
 		.primaryKey()
-		.$defaultFn(() => nanoid()),
+		.$defaultFn(() => generateId()),
 	name: text("name").notNull(),
 	robloxUserId: text("roblox_user_id").notNull().unique(),
 });
@@ -15,7 +15,7 @@ export const userTable = sqliteTable("users", {
 export const groupTable = sqliteTable("groups", {
 	id: text("id")
 		.primaryKey()
-		.$defaultFn(() => nanoid()),
+		.$defaultFn(() => generateId()),
 	name: text(),
 });
 
@@ -35,17 +35,17 @@ export const userToGroupTable = sqliteTable(
 export const keyTable = sqliteTable("keys", {
 	id: text("id")
 		.primaryKey()
-		.$defaultFn(() => nanoid()),
+		.$defaultFn(() => generateId()),
 	key: text("key")
 		.unique()
-		.$defaultFn(() => nanoid()),
+		.$defaultFn(() => generateId()),
 	ownerId: text("owner_id").notNull(),
 });
 
 export const assetTable = sqliteTable("assets", {
 	id: text("id")
 		.primaryKey()
-		.$defaultFn(() => nanoid()),
+		.$defaultFn(() => generateId()),
 	robloxId: text("roblox_id").notNull().unique(),
 	key: text("key").notNull(),
 });
