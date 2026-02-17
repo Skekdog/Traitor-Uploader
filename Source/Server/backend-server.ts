@@ -115,7 +115,7 @@ async function getAvailableAssets(bearer: string | undefined) {
 	if (!bearer) return status(401);
 
 	const assets = await db.getAuthorisedAssets(bearer);
-	if (assets === undefined) return status(403);
+	if (assets === null) return status(403);
 
 	return JSON.stringify(assets);
 }
