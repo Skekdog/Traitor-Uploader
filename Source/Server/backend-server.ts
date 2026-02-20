@@ -224,7 +224,7 @@ async function createAsset(bearer: string | undefined, body: Uint8Array) {
 	if (!bearer) return status(401);
 
 	const authorisedAssets = await db.getAuthorisedAssets(bearer);
-	if ((authorisedAssets?.length ?? 0) >= KEY_ASSET_LIMIT) return status(499, "Limit Exceeded");
+	if ((authorisedAssets?.length ?? 0) >= KEY_ASSET_LIMIT && !await db.getIsAdmin(bearer)) return status(499, "Limit Exceeded");
 
 	const formData = net.createFileForm(body, "asset.rbxm", "model/x-rbxm");
 
