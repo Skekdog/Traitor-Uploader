@@ -65,7 +65,7 @@ export async function saveNewKey(key: string): Promise<string> {
 		await tx.insert(schema.keyTable).values({
 			key,
 			ownerId: groupId,
-			isAdmin: 0,
+			isAdmin: false,
 		});
 
 		return groupId;
@@ -96,7 +96,7 @@ export async function saveKey(
 		const groupId = existingKey.ownerId;
 
 		await tx.update(schema.keyTable).set({
-			isAdmin: isAdmin ? 1 : 0,
+			isAdmin: isAdmin,
 		}).where(eq(schema.keyTable.key, key));
 
 		await tx.delete(schema.userToGroupTable).where(eq(schema.userToGroupTable.groupId, groupId));
@@ -165,7 +165,7 @@ export async function getAuthorisedAssets(
 export async function getAdmins() {
 	const keys = await db.query.keyTable.findMany({
 		where: {
-			isAdmin: 1,
+			isAdmin: true,
 		},
 	});
 
@@ -173,7 +173,7 @@ export async function getAdmins() {
 }
 
 export async function getIsAdmin(key: string) {
-	return Boolean((await getAdmins())?.find(val => val.key === key)?.isAdmin ?? false);
+	return (await getAdmins())?.find(val => val.key === key)?.isAdmin ?? false;
 }
 
 export async function getUsers(key: string) {

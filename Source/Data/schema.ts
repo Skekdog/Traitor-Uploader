@@ -40,7 +40,7 @@ export const keyTable = sqliteTable("keys", {
 		.notNull()
 		.$defaultFn(() => generateId()),
 	ownerId: text("owner_id").notNull().references(() => groupTable.id),
-	isAdmin: integer("isAdmin").notNull().default(0),
+	isAdmin: integer("isAdmin", {mode: "boolean"}).notNull().default(false),
 });
 
 export const assetTable = sqliteTable("assets", {
