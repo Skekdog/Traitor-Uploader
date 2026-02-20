@@ -9,6 +9,7 @@ import {
 	getUsers,
 	saveKey,
 	saveNewKey,
+	getIsAdmin,
 } from "../Data/db";
 import { generate } from "../Data/key";
 import { backend, KEY_ASSET_LIMIT } from "../Server/backend-server";
@@ -26,15 +27,18 @@ export const app = new Elysia()
 
 		const keys = await getAllKeys();
 
-		const keyValues: {[key: string]: {userIds: string, assetIds: string}} = {};
+		const keyValues: {[key: string]: {userIds: string, assetIds: string, isAdmin: boolean}} = {};
 
 		for (const { key } of keys) {
 			const users = (await getUsers(key) ?? []).map(user => user.robloxUserId);
 			const assets = await getAuthorisedAssets(key) ?? [];
 
+			const isAdmin = await getIsAdmin(key);
+
 			keyValues[key] = {
 				userIds: users.join(","),
 				assetIds: assets.join(","),
+				isAdmin: isAdmin,
 			};
 		}
 
@@ -61,6 +65,8 @@ export const app = new Elysia()
 
 			const queriedUsers = (await getUsers(key)) ?? [];
 
+			const isAdmin = body.isAdmin === undefined ? await getIsAdmin(key) : body.isAdmin;
+
 			await saveKey(
 				key,
 				body.userIds?.map((value) => value.toString()) ??
@@ -68,6 +74,7 @@ export const app = new Elysia()
 				body.assetIds?.map((value) => value.toString()) ??
 					(await getAuthorisedAssets(key)) ??
 					[],
+				isAdmin,
 			);
 
 			return status(200);
@@ -76,6 +83,7 @@ export const app = new Elysia()
 			body: t.Object({
 				userIds: t.Optional(t.Array(t.Number())),
 				assetIds: t.Optional(t.Array(t.Number())),
+				isAdmin: t.Optional(t.Boolean()),
 			}),
 		},
 	)

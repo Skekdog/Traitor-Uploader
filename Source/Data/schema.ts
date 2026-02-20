@@ -1,7 +1,7 @@
 /* eslint @typescript-eslint/no-unsafe-assignment: off, @typescript-eslint/no-unsafe-call: off, @typescript-eslint/no-unsafe-member-access: off */
 // eslint is for some reason absolutely scared senseless of drizzle, but its FINE.
 import { defineRelations } from "drizzle-orm";
-import { primaryKey, sqliteTable, text } from "drizzle-orm/sqlite-core";
+import { integer, primaryKey, sqliteTable, text } from "drizzle-orm/sqlite-core";
 import { generateId } from "../Util/id";
 
 export const userTable = sqliteTable("users", {
@@ -40,6 +40,7 @@ export const keyTable = sqliteTable("keys", {
 		.notNull()
 		.$defaultFn(() => generateId()),
 	ownerId: text("owner_id").notNull().references(() => groupTable.id),
+	isAdmin: integer("isAdmin").notNull().default(0),
 });
 
 export const assetTable = sqliteTable("assets", {

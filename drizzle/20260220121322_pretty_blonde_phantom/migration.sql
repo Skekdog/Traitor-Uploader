@@ -1,0 +1,1 @@
+ALTER TABLE `keys` ADD `isAdmin` integer DEFAULT 0 NOT NULL;

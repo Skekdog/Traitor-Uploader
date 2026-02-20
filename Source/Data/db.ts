@@ -65,6 +65,7 @@ export async function saveNewKey(key: string): Promise<string> {
 		await tx.insert(schema.keyTable).values({
 			key,
 			ownerId: groupId,
+			isAdmin: 0,
 		});
 
 		return groupId;
@@ -75,6 +76,7 @@ export async function saveKey(
 	key: string,
 	userIds: string[],
 	authorisedAssets: string[],
+	isAdmin: boolean,
 ): Promise<void> {
 	for (const userId of userIds) {
 		await createUserIfNotExists(userId);
@@ -92,6 +94,10 @@ export async function saveKey(
 		if (!existingKey) throw new Error("key does not exist, use saveNewKey() first");
 
 		const groupId = existingKey.ownerId;
+
+		await tx.update(schema.keyTable).set({
+			isAdmin: isAdmin ? 1 : 0,
+		}).where(eq(schema.keyTable.key, key));
 
 		await tx.delete(schema.userToGroupTable).where(eq(schema.userToGroupTable.groupId, groupId));
 
@@ -154,6 +160,20 @@ export async function getAuthorisedAssets(
 	});
 
 	return assets.map((value) => value.robloxId);
+}
+
+export async function getAdmins() {
+	const keys = await db.query.keyTable.findMany({
+		where: {
+			isAdmin: 1,
+		},
+	});
+
+	return keys;
+}
+
+export async function getIsAdmin(key: string) {
+	return Boolean((await getAdmins())?.find(val => val.key === key)?.isAdmin ?? false);
 }
 
 export async function getUsers(key: string) {

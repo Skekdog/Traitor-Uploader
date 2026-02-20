@@ -34,14 +34,20 @@ function getHeaders() {
 	return headers;
 }
 
-function createTableInput(id: string, value: string, enabled: boolean, parent: Node) {
+function createTableInput(id: string, value: string | boolean, enabled: boolean, parent: Node) {
 	const cell = document.createElement("td");
 
 	const input = document.createElement("input");
 	input.id = id;
-	input.value = value;
 	input.readOnly = !enabled;
-	input.type = "text";
+
+	if (typeof value === "string") {
+		input.value = value;
+		input.type = "text";
+	} else {
+		input.checked = value;
+		input.type = "checkbox";
+	}
 
 	cell.appendChild(input);
 	parent.appendChild(cell);
@@ -63,21 +69,30 @@ function createTableButton(id: string, value: string, enabled: boolean, parent: 
 	return input;
 }
 
-async function updateKey(e: Event, key: string, field: "assetIds" | "userIds") {
+async function updateKey(e: Event, key: string, field: "assetIds" | "userIds" | "isAdmin") {
 	const input = e.target as HTMLInputElement;
 
-	const ids: number[] = [];
-	if (input.value) {
-		for (const val of input.value.split(",")) {
-			const id = Number.parseInt(val);
-			if (!Number.isFinite(id)) return alert("Invalid input");
-			ids.push(id);
+	let body;
+	if (field === "isAdmin") {
+		body = {
+			isAdmin: input.checked,
+		};
+	} else {
+		const ids: number[] = [];
+		if (input.value) {
+			for (const val of input.value.split(",")) {
+				const id = Number.parseInt(val);
+				if (!Number.isFinite(id)) return alert("Invalid input");
+				ids.push(id);
+			}
 		}
+
+		body = {
+			[field]: ids,
+		};
 	}
 
-	const response = await app.key({key: key}).patch({
-		[field]: ids,
-	}, {
+	const response = await app.key({key: key}).patch(body, {
 		headers: getHeaders(),
 	});
 
@@ -98,7 +113,7 @@ async function deleteKey(key: string) {
 	row?.remove();
 }
 
-function createTableElement(key: string, data: {userIds: string, assetIds: string}) {
+function createTableElement(key: string, data: {userIds: string, assetIds: string, isAdmin: boolean}) {
 	const row = document.createElement("tr");
 	row.className = "created-table-element";
 	row.id = "row-" + key;
@@ -110,6 +125,9 @@ function createTableElement(key: string, data: {userIds: string, assetIds: strin
 
 	createTableInput("assetIds-" + key, data.assetIds, true, row)
 		.addEventListener("focusout", async e => updateKey(e, key, "assetIds"));
+
+	createTableInput("isAdmin-" + key, data.isAdmin, true, row)
+		.addEventListener("click", async e => updateKey(e, key, "isAdmin"));
 
 	createTableButton("delete-" + key, "-", true, row)
 		.addEventListener("click", () => deleteKey(key));
@@ -140,5 +158,5 @@ newEntryButton.addEventListener("click", async () => {
 
 	if (response.error) return alert(response.error.value);
 
-	createTableElement(response.data, {userIds: "", assetIds: ""});
+	createTableElement(response.data, {userIds: "", assetIds: "", isAdmin: false});
 });

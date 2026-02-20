@@ -16,7 +16,7 @@ const MAX_REQUEST_SIZE = 1024 * 1024 * 4; // 4MB. If anyone has a map larger tha
 const RATE_LIMIT_COUNT = 5;
 const RATE_LIMIT_INTERVAL = 60_000; // in ms
 
-const rateLimits: {[key: string]: {requests: number, firstRequestAt: number} | undefined} = {};
+const rateLimits: {[keyOrAddress: string]: {requests: number, firstRequestAt: number} | undefined} = {};
 
 function rateLimit(key: string): boolean {
 	const limit = rateLimits[key];
@@ -111,27 +111,48 @@ async function authoriseGroup(assetId: number) {
 	return response;
 }
 
+async function getPublicAssets() {
+	let publicAssets: string[] = [];
+
+	const admins = await db.getAdmins();
+	for (const admin of admins) {
+		publicAssets = publicAssets.concat(await db.getAuthorisedAssets(admin.key) ?? []);
+	}
+
+	return publicAssets;
+}
+
 async function getAvailableAssets(bearer: string | undefined) {
-	if (!bearer) return status(401);
+	if (!bearer) return JSON.stringify({
+		private: [],
+		public: await getPublicAssets(),
+	});
 
 	const assets = await db.getAuthorisedAssets(bearer);
 	if (assets === null) return status(403);
 
-	return JSON.stringify(assets);
+	return JSON.stringify({
+		private: assets,
+		public: await getPublicAssets(),
+	});
 }
 
-async function isAssetAuthorised(bearer: string, assetId: string) {
-	return (await db.getAuthorisedAssets(bearer) ?? []).find(value => value === assetId) !== undefined;
+async function isAssetAuthorisedWrite(bearer: string, assetId: string) {
+	return (await db.getAuthorisedAssets(bearer) ?? []).includes(assetId);
 }
 
-async function getAssetContent(bearer: string | undefined, assetId: string) {
+async function isAssetAuthorisedRead(bearer: string | undefined, assetId: string) {
+	if (!bearer) return (await getPublicAssets()).includes(assetId);
+	return await isAssetAuthorisedWrite(bearer, assetId) ?? (await getPublicAssets()).includes(assetId);
+}
+
+async function getAssetContent(socket: Bun.SocketAddress | undefined | null, bearer: string | undefined, assetId: string) {
 	// The first 8 bytes are the asset id
 
-	if (!bearer) return status(401);
+	if (!await isAssetAuthorisedRead(bearer, assetId)) return status(!bearer ? 401 : 403);
 
-	if (!await isAssetAuthorised(bearer, assetId)) return status(403);
-
-	if (!rateLimit(bearer)) return status(429);
+	if (!bearer && !rateLimit(socket?.address ?? "")) return status(429);
+	if (bearer && !rateLimit(bearer)) return status(429);
 
 	const locationRequestHeaders = new Headers();
 	locationRequestHeaders.append("AssetType", "Model");
@@ -176,7 +197,7 @@ async function updateAsset(bearer: string | undefined, body: Uint8Array) {
 	const assetId = new DataView(body.slice(0, 8).buffer, 0, 8).getFloat64(0, true);
 	const assetContent = body.slice(8);
 
-	if (!await isAssetAuthorised(bearer, assetId.toString())) return status(403);
+	if (!await isAssetAuthorisedWrite(bearer, assetId.toString())) return status(403);
 
 	const formData = net.createFileForm(assetContent, "asset.rbxm", "model/x-rbxm");
 
@@ -242,7 +263,7 @@ async function createAsset(bearer: string | undefined, body: Uint8Array) {
 	newAssets.push(response.Result.assetId.toString());
 
 	const queriedUsers = await db.getUsers(bearer) ?? [];
-	await db.saveKey(bearer, queriedUsers.map((value) => value.robloxUserId), newAssets);
+	await db.saveKey(bearer, queriedUsers.map((value) => value.robloxUserId), newAssets, await db.getIsAdmin(bearer));
 
 	return JSON.stringify(response.Result.assetId);
 }
@@ -257,8 +278,8 @@ export const backend = new Elysia({
 	.get("/assets", ({ bearer }) => {
 		return getAvailableAssets(bearer);
 	})
-	.get("/asset-content/:assetId", ({ bearer, params: { assetId } }) => {
-		return getAssetContent(bearer, assetId);
+	.get("/asset-content/:assetId", ({ server, request, bearer, params: { assetId } }) => {
+		return getAssetContent(server?.requestIP(request), bearer, assetId);
 	})
 	.patch("/assets", async ({ bearer, body }) => {
 		return updateAsset(bearer, body);
