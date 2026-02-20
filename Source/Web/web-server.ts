@@ -61,11 +61,11 @@ export const app = new Elysia()
 
 			if (!(await doesKeyExist(key))) return status(404);
 
-			if ((body.assetIds ?? []).length > KEY_ASSET_LIMIT && !await getIsAdmin(bearer)) return status(400);
+			const isAdmin = body.isAdmin === undefined ? await getIsAdmin(key) : body.isAdmin;
+
+			if ((body.assetIds?.length ?? 0) > KEY_ASSET_LIMIT && !isAdmin) return status(400);
 
 			const queriedUsers = (await getUsers(key)) ?? [];
-
-			const isAdmin = body.isAdmin === undefined ? await getIsAdmin(key) : body.isAdmin;
 
 			await saveKey(
 				key,
