@@ -93,15 +93,19 @@ export async function saveKey(
 
 		const groupId = existingKey.ownerId;
 
-		await tx
-			.insert(schema.userToGroupTable)
-			.values(
-				users.map((user) => ({
-					userId: user.id,
-					groupId,
-				})),
-			)
-			.onConflictDoNothing();
+		await tx.delete(schema.userToGroupTable).where(eq(schema.userToGroupTable.groupId, groupId));
+
+		if (users.length > 0) {
+			await tx
+				.insert(schema.userToGroupTable)
+				.values(
+					users.map((user) => ({
+						userId: user.id,
+						groupId,
+					})),
+				)
+				.onConflictDoNothing();
+		}
 
 		await tx.delete(schema.assetTable).where(eq(schema.assetTable.key, key));
 
