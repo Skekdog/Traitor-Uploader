@@ -152,7 +152,9 @@ async function getAssetContent(socket: Bun.SocketAddress | undefined | null, bea
 	if (!await isAssetAuthorisedRead(bearer, assetId)) return status(!bearer ? 401 : 403);
 
 	if (!bearer && !rateLimit(socket?.address ?? "")) return status(429);
-	if (bearer && !rateLimit(bearer)) return status(429);
+
+	const isAdmin = bearer ? await db.getIsAdmin(bearer) : false;
+	if (!isAdmin && bearer && !rateLimit(bearer)) return status(429);
 
 	const locationRequestHeaders = new Headers();
 	locationRequestHeaders.append("AssetType", "Model");
@@ -190,7 +192,9 @@ async function updateAsset(bearer: string | undefined, body: Uint8Array) {
 	const users = await db.getUsers(bearer);
 	if (!users) return status(403);
 
-	if (!rateLimit(bearer)) return status(429);
+	const isAdmin = await db.getIsAdmin(bearer);
+
+	if (!isAdmin && !rateLimit(bearer)) return status(429);
 
 	const description = users.map((value) => value.robloxUserId).join(",");
 
@@ -234,7 +238,7 @@ async function createAsset(bearer: string | undefined, body: Uint8Array) {
 	const users = await db.getUsers(bearer);
 	if (!users) return status(403);
 
-	if (!rateLimit(bearer)) return status(429);
+	if (!isAdmin && !rateLimit(bearer)) return status(429);
 
 	const description = users.map((value) => value.robloxUserId).join(",");
 
