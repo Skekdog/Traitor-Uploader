@@ -15,13 +15,13 @@ export const db = drizzle(`file:${filePath}`, {
 export async function doesKeyExist(key: string): Promise<boolean> {
 	if (!isValidKey(key)) return false;
 
-	const queriedKey = await db.query.keyTable.findFirst({
+	const queriedGroup = await db.query.groupTable.findFirst({
 		where: {
 			key: key,
 		},
 	});
 
-	if (!queriedKey) return false;
+	if (!queriedGroup) return false;
 
 	return true;
 }
@@ -60,17 +60,11 @@ export async function saveNewKey(key: string): Promise<string> {
 		const [group] = await tx
 			.insert(schema.groupTable)
 			.values({
-				name: `Key Group ${key}`,
+				key,
 			})
 			.returning();
 
 		const groupId = group!.id;
-
-		await tx.insert(schema.keyTable).values({
-			key,
-			ownerId: groupId,
-			isAdmin: false,
-		});
 
 		return groupId;
 	});
@@ -89,19 +83,19 @@ export async function saveKey(
 	const users = await getManyUsers(userIds.map((value) => value.toString()));
 
 	await db.transaction(async (tx) => {
-		const existingKey = await tx.query.keyTable.findFirst({
+		const existingGroup = await tx.query.groupTable.findFirst({
 			where: {
 				key: key,
 			},
 		});
 
-		if (!existingKey) throw new Error("key does not exist, use saveNewKey() first");
+		if (!existingGroup) throw new Error("key does not exist, use saveNewKey() first");
 
-		const groupId = existingKey.ownerId;
+		const groupId = existingGroup.id;
 
-		await tx.update(schema.keyTable).set({
+		await tx.update(schema.groupTable).set({
 			isAdmin: isAdmin,
-		}).where(eq(schema.keyTable.key, key));
+		}).where(eq(schema.groupTable.id, groupId));
 
 		await tx.delete(schema.userToGroupTable).where(eq(schema.userToGroupTable.groupId, groupId));
 
@@ -117,13 +111,13 @@ export async function saveKey(
 				.onConflictDoNothing();
 		}
 
-		await tx.delete(schema.assetTable).where(eq(schema.assetTable.key, key));
+		await tx.delete(schema.assetTable).where(eq(schema.assetTable.groupId, groupId));
 
 		if (authorisedAssets.length > 0) {
 			await tx.insert(schema.assetTable).values(
 				authorisedAssets.map((assetId) => ({
 					robloxId: assetId.toString(),
-					key,
+					groupId,
 				})),
 			).onConflictDoNothing();
 		}
@@ -133,13 +127,14 @@ export async function saveKey(
 export async function deleteKey(key: string): Promise<void> {
 	if (!isValidKey(key)) return;
 
-	await db.delete(schema.keyTable).where(eq(schema.keyTable.key, key));
+	console.log(key);
+	await db.delete(schema.groupTable).where(eq(schema.groupTable.key, key));
 
 	return;
 }
 
-export async function getAllKeys(): Promise<schema.Key[]> {
-	return await db.query.keyTable.findMany();
+export async function getAllGroups(): Promise<schema.Group[]> {
+	return await db.query.groupTable.findMany();
 }
 
 export async function getAuthorisedAssets(
@@ -147,18 +142,18 @@ export async function getAuthorisedAssets(
 ): Promise<string[] | null> {
 	if (!isValidKey(key)) return null;
 
-	const queriedKey = await db.query.keyTable.findFirst({
+	const queriedGroup = await db.query.groupTable.findFirst({
 		where: {
 			key: key,
 		},
 	});
 
-	if (!queriedKey) return null;
+	if (!queriedGroup) return null;
 
 	const assets = await db.query.assetTable.findMany({
 		where: {
 			owner: {
-				key: queriedKey.key,
+				id: queriedGroup.id,
 			},
 		},
 	});
@@ -167,13 +162,13 @@ export async function getAuthorisedAssets(
 }
 
 export async function getAdmins() {
-	const keys = await db.query.keyTable.findMany({
+	const groups = await db.query.groupTable.findMany({
 		where: {
 			isAdmin: true,
 		},
 	});
 
-	return keys;
+	return groups;
 }
 
 export async function getIsAdmin(key: string) {
@@ -183,12 +178,18 @@ export async function getIsAdmin(key: string) {
 export async function getUsers(key: string) {
 	if (!isValidKey(key)) return null;
 
+	const group = await db.query.groupTable.findFirst({
+		where: {
+			key,
+		},
+	});
+
+	if (!group) return null;
+
 	const users = await db.query.userTable.findMany({
 		where: {
 			groups: {
-				keys: {
-					key: key,
-				},
+				id: group?.id,
 			},
 		},
 	});

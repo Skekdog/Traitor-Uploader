@@ -7,15 +7,20 @@ import { generateId } from "../Util/id";
 export const userTable = sqliteTable("users", {
 	id: text("id")
 		.primaryKey()
-		.$defaultFn(() => generateId()),
+		.$defaultFn(() => generateId())
+		.unique(),
 	robloxUserId: text("roblox_user_id").notNull().unique(),
 });
 
 export const groupTable = sqliteTable("groups", {
 	id: text("id")
 		.primaryKey()
-		.$defaultFn(() => generateId()),
-	name: text(),
+		.$defaultFn(() => generateId())
+		.unique(),
+	key: text("key")
+		.$defaultFn(() => generateId())
+		.notNull(),
+	isAdmin: integer("isAdmin", {mode: "boolean"}).notNull().default(false),
 });
 
 export const userToGroupTable = sqliteTable(
@@ -26,35 +31,25 @@ export const userToGroupTable = sqliteTable(
 			.references(() => userTable.id),
 		groupId: text("group_id")
 			.notNull()
-			.references(() => groupTable.id),
+			.references(() => groupTable.id, {
+				onDelete: "cascade"
+			}),
 	},
 	(t) => [primaryKey({ columns: [t.userId, t.groupId] })],
 );
-
-export const keyTable = sqliteTable("keys", {
-	id: text("id")
-		.primaryKey()
-		.$defaultFn(() => generateId()),
-	key: text("key")
-		.unique()
-		.notNull()
-		.$defaultFn(() => generateId()),
-	ownerId: text("owner_id").notNull().references(() => groupTable.id),
-	isAdmin: integer("isAdmin", {mode: "boolean"}).notNull().default(false),
-});
 
 export const assetTable = sqliteTable("assets", {
 	id: text("id")
 		.primaryKey()
 		.$defaultFn(() => generateId()),
 	robloxId: text("roblox_id").notNull().unique(),
-	key: text("key").notNull().references(() => keyTable.key, {
+	groupId: text("group_id").notNull().references(() => groupTable.id, {
 		onDelete: "cascade"
 	}),
 });
 
 export const relations = defineRelations(
-	{ userTable, keyTable, groupTable, userToGroupTable, assetTable },
+	{ userTable, groupTable: groupTable, userToGroupTable, assetTable },
 	(r) => ({
 		userTable: {
 			groups: r.many.groupTable({
@@ -64,25 +59,16 @@ export const relations = defineRelations(
 		},
 		groupTable: {
 			participants: r.many.userTable(),
-			keys: r.many.keyTable()
-		},
-		keyTable: {
-			owner: r.one.groupTable({
-				from: r.keyTable.ownerId,
-				to: r.groupTable.id,
-			}),
-			assets: r.many.assetTable()
 		},
 		assetTable: {
-			owner: r.one.keyTable({
-				from: r.assetTable.key,
-				to: r.keyTable.key
+			owner: r.one.groupTable({
+				from: r.assetTable.groupId,
+				to: r.groupTable.id,
 			})
 		}
 	}),
 );
 
-export type Key = typeof keyTable.$inferSelect;
 export type User = typeof userTable.$inferSelect;
 export type Asset = typeof assetTable.$inferSelect;
 export type Group = typeof groupTable.$inferSelect;
