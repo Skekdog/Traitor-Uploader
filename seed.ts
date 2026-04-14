@@ -1,12 +1,12 @@
 import { seed } from "drizzle-seed";
 import { db } from "./Source/Data/db";
-import { userTable, assetTable, groupTable, keyTable } from "./Source/Data/schema";
+import { userTable, assetTable, groupTable } from "./Source/Data/schema";
 import { migrate } from "drizzle-orm/libsql/migrator";
 
 await migrate(db, {
 	migrationsFolder: "drizzle"
 });
 
-await seed(db, { userTable, assetTable, groupTable, keyTable }, {
+await seed(db, { userTable, assetTable, groupTable }, {
 	count: 2
 });

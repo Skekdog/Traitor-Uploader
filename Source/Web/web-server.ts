@@ -4,7 +4,7 @@ import { env } from "../env";
 import {
 	deleteKey,
 	doesKeyExist,
-	getAllKeys,
+	getAllGroups,
 	getAuthorisedAssets,
 	getUsers,
 	saveKey,
@@ -25,7 +25,7 @@ export const app = new Elysia()
 		if (!bearer) return status(401);
 		if (bearer !== env.WEB_PASSWORD) return status(403);
 
-		const keys = await getAllKeys();
+		const keys = await getAllGroups();
 
 		const keyValues: {[key: string]: {userIds: string, assetIds: string, isAdmin: boolean}} = {};
 
