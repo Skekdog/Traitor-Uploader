@@ -1,3 +1,5 @@
+LABEL org.opencontainers.image.source="https://github.com/Skekdog/Traitor-Uploader"
+
 FROM oven/bun AS build
 
 WORKDIR /app
@@ -23,6 +25,7 @@ FROM gcr.io/distroless/base
 WORKDIR /app
 
 COPY --from=build /app/server server
+COPY drizzle drizzle
 
 ENV NODE_ENV=production
 ENV PORT=3000
