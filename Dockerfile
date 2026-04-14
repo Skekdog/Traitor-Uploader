@@ -20,7 +20,7 @@ RUN bun build \
 	--outfile server \
 	Source/index.ts
 
-FROM gcr.io/distroless/base
+FROM oven/bun
 
 WORKDIR /app
 
@@ -29,6 +29,10 @@ COPY drizzle drizzle
 
 ENV NODE_ENV=production
 ENV PORT=3000
+
+CMD ["./server"]
+
+EXPOSE 3000
 
 CMD ["./server"]
 
