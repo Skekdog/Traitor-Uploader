@@ -1,6 +1,6 @@
-LABEL org.opencontainers.image.source="https://github.com/Skekdog/Traitor-Uploader"
-
 FROM oven/bun AS build
+
+LABEL org.opencontainers.image.source="https://github.com/Skekdog/Traitor-Uploader"
 
 WORKDIR /app
 
