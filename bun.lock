@@ -5,23 +5,24 @@
     "": {
       "name": "traitor-uploader",
       "dependencies": {
-        "@elysiajs/bearer": "^1.4.3",
-        "@elysiajs/eden": "^1.4.8",
-        "@libsql/client": "^0.17.0",
-        "drizzle-orm": "^1.0.0-beta.15-859cf75",
-        "drizzle-seed": "^1.0.0-beta.15-859cf75",
-        "elysia": "^1.4.22",
-        "ulid": "^3.0.2",
+        "@libsql/linux-x64-musl": "^0.5.29",
       },
       "devDependencies": {
+        "@elysiajs/bearer": "^1.4.3",
+        "@elysiajs/eden": "^1.4.8",
         "@eslint/js": "^10.0.1",
+        "@libsql/client": "^0.17.2",
         "@stylistic/eslint-plugin": "^5.7.1",
         "@types/bun": "latest",
         "drizzle-kit": "^1.0.0-beta.15-859cf75",
+        "drizzle-orm": "^1.0.0-beta.15-859cf75",
+        "drizzle-seed": "^1.0.0-beta.15-859cf75",
+        "elysia": "^1.4.22",
         "eslint": "^10.0.0",
         "globals": "^17.3.0",
         "jiti": "^2.6.1",
         "typescript-eslint": "^8.55.0",
+        "ulid": "^3.0.2",
       },
       "peerDependencies": {
         "typescript": "^5",
@@ -155,31 +156,31 @@
 
     "@js-temporal/polyfill": ["@js-temporal/polyfill@0.5.1", "", { "dependencies": { "jsbi": "^4.3.0" } }, "sha512-hloP58zRVCRSpgDxmqCWJNlizAlUgJFqG2ypq79DCvyv9tHjRYMDOcPFjzfl/A1/YxDvRCZz8wvZvmapQnKwFQ=="],
 
-    "@libsql/client": ["@libsql/client@0.17.0", "", { "dependencies": { "@libsql/core": "^0.17.0", "@libsql/hrana-client": "^0.9.0", "js-base64": "^3.7.5", "libsql": "^0.5.22", "promise-limit": "^2.7.0" } }, "sha512-TLjSU9Otdpq0SpKHl1tD1Nc9MKhrsZbCFGot3EbCxRa8m1E5R1mMwoOjKMMM31IyF7fr+hPNHLpYfwbMKNusmg=="],
+    "@libsql/client": ["@libsql/client@0.17.2", "", { "dependencies": { "@libsql/core": "^0.17.2", "@libsql/hrana-client": "^0.9.0", "js-base64": "^3.7.5", "libsql": "^0.5.28", "promise-limit": "^2.7.0" } }, "sha512-0aw0S3iQMHvOxfRt5j1atoCCPMT3gjsB2PS8/uxSM1DcDn39xqz6RlgSMxtP8I3JsxIXAFuw7S41baLEw0Zi+Q=="],
 
-    "@libsql/core": ["@libsql/core@0.17.0", "", { "dependencies": { "js-base64": "^3.7.5" } }, "sha512-hnZRnJHiS+nrhHKLGYPoJbc78FE903MSDrFJTbftxo+e52X+E0Y0fHOCVYsKWcg6XgB7BbJYUrz/xEkVTSaipw=="],
+    "@libsql/core": ["@libsql/core@0.17.2", "", { "dependencies": { "js-base64": "^3.7.5" } }, "sha512-L8qv12HZ/jRBcETVR3rscP0uHNxh+K3EABSde6scCw7zfOdiLqO3MAkJaeE1WovPsjXzsN/JBoZED4+7EZVT3g=="],
 
-    "@libsql/darwin-arm64": ["@libsql/darwin-arm64@0.5.22", "", { "os": "darwin", "cpu": "arm64" }, "sha512-4B8ZlX3nIDPndfct7GNe0nI3Yw6ibocEicWdC4fvQbSs/jdq/RC2oCsoJxJ4NzXkvktX70C1J4FcmmoBy069UA=="],
+    "@libsql/darwin-arm64": ["@libsql/darwin-arm64@0.5.29", "", { "os": "darwin", "cpu": "arm64" }, "sha512-K+2RIB1OGFPYQbfay48GakLhqf3ArcbHqPFu7EZiaUcRgFcdw8RoltsMyvbj5ix2fY0HV3Q3Ioa/ByvQdaSM0A=="],
 
-    "@libsql/darwin-x64": ["@libsql/darwin-x64@0.5.22", "", { "os": "darwin", "cpu": "x64" }, "sha512-ny2HYWt6lFSIdNFzUFIJ04uiW6finXfMNJ7wypkAD8Pqdm6nAByO+Fdqu8t7sD0sqJGeUCiOg480icjyQ2/8VA=="],
+    "@libsql/darwin-x64": ["@libsql/darwin-x64@0.5.29", "", { "os": "darwin", "cpu": "x64" }, "sha512-OtT+KFHsKFy1R5FVadr8FJ2Bb1mghtXTyJkxv0trocq7NuHntSki1eUbxpO5ezJesDvBlqFjnWaYYY516QNLhQ=="],
 
     "@libsql/hrana-client": ["@libsql/hrana-client@0.9.0", "", { "dependencies": { "@libsql/isomorphic-ws": "^0.1.5", "cross-fetch": "^4.0.0", "js-base64": "^3.7.5", "node-fetch": "^3.3.2" } }, "sha512-pxQ1986AuWfPX4oXzBvLwBnfgKDE5OMhAdR/5cZmRaB4Ygz5MecQybvwZupnRz341r2CtFmbk/BhSu7k2Lm+Jw=="],
 
     "@libsql/isomorphic-ws": ["@libsql/isomorphic-ws@0.1.5", "", { "dependencies": { "@types/ws": "^8.5.4", "ws": "^8.13.0" } }, "sha512-DtLWIH29onUYR00i0GlQ3UdcTRC6EP4u9w/h9LxpUZJWRMARk6dQwZ6Jkd+QdwVpuAOrdxt18v0K2uIYR3fwFg=="],
 
-    "@libsql/linux-arm-gnueabihf": ["@libsql/linux-arm-gnueabihf@0.5.22", "", { "os": "linux", "cpu": "arm" }, "sha512-3Uo3SoDPJe/zBnyZKosziRGtszXaEtv57raWrZIahtQDsjxBVjuzYQinCm9LRCJCUT5t2r5Z5nLDPJi2CwZVoA=="],
+    "@libsql/linux-arm-gnueabihf": ["@libsql/linux-arm-gnueabihf@0.5.29", "", { "os": "linux", "cpu": "arm" }, "sha512-CD4n4zj7SJTHso4nf5cuMoWoMSS7asn5hHygsDuhRl8jjjCTT3yE+xdUvI4J7zsyb53VO5ISh4cwwOtf6k2UhQ=="],
 
-    "@libsql/linux-arm-musleabihf": ["@libsql/linux-arm-musleabihf@0.5.22", "", { "os": "linux", "cpu": "arm" }, "sha512-LCsXh07jvSojTNJptT9CowOzwITznD+YFGGW+1XxUr7fS+7/ydUrpDfsMX7UqTqjm7xG17eq86VkWJgHJfvpNg=="],
+    "@libsql/linux-arm-musleabihf": ["@libsql/linux-arm-musleabihf@0.5.29", "", { "os": "linux", "cpu": "arm" }, "sha512-2Z9qBVpEJV7OeflzIR3+l5yAd4uTOLxklScYTwpZnkm2vDSGlC1PRlueLaufc4EFITkLKXK2MWBpexuNJfMVcg=="],
 
-    "@libsql/linux-arm64-gnu": ["@libsql/linux-arm64-gnu@0.5.22", "", { "os": "linux", "cpu": "arm64" }, "sha512-KSdnOMy88c9mpOFKUEzPskSaF3VLflfSUCBwas/pn1/sV3pEhtMF6H8VUCd2rsedwoukeeCSEONqX7LLnQwRMA=="],
+    "@libsql/linux-arm64-gnu": ["@libsql/linux-arm64-gnu@0.5.29", "", { "os": "linux", "cpu": "arm64" }, "sha512-gURBqaiXIGGwFNEaUj8Ldk7Hps4STtG+31aEidCk5evMMdtsdfL3HPCpvys+ZF/tkOs2MWlRWoSq7SOuCE9k3w=="],
 
-    "@libsql/linux-arm64-musl": ["@libsql/linux-arm64-musl@0.5.22", "", { "os": "linux", "cpu": "arm64" }, "sha512-mCHSMAsDTLK5YH//lcV3eFEgiR23Ym0U9oEvgZA0667gqRZg/2px+7LshDvErEKv2XZ8ixzw3p1IrBzLQHGSsw=="],
+    "@libsql/linux-arm64-musl": ["@libsql/linux-arm64-musl@0.5.29", "", { "os": "linux", "cpu": "arm64" }, "sha512-fwgYZ0H8mUkyVqXZHF3mT/92iIh1N94Owi/f66cPVNsk9BdGKq5gVpoKO+7UxaNzuEH1roJp2QEwsCZMvBLpqg=="],
 
-    "@libsql/linux-x64-gnu": ["@libsql/linux-x64-gnu@0.5.22", "", { "os": "linux", "cpu": "x64" }, "sha512-kNBHaIkSg78Y4BqAdgjcR2mBilZXs4HYkAmi58J+4GRwDQZh5fIUWbnQvB9f95DkWUIGVeenqLRFY2pcTmlsew=="],
+    "@libsql/linux-x64-gnu": ["@libsql/linux-x64-gnu@0.5.29", "", { "os": "linux", "cpu": "x64" }, "sha512-y14V0vY0nmMC6G0pHeJcEarcnGU2H6cm21ZceRkacWHvQAEhAG0latQkCtoS2njFOXiYIg+JYPfAoWKbi82rkg=="],
 
-    "@libsql/linux-x64-musl": ["@libsql/linux-x64-musl@0.5.22", "", { "os": "linux", "cpu": "x64" }, "sha512-UZ4Xdxm4pu3pQXjvfJiyCzZop/9j/eA2JjmhMaAhe3EVLH2g11Fy4fwyUp9sT1QJYR1kpc2JLuybPM0kuXv/Tg=="],
+    "@libsql/linux-x64-musl": ["@libsql/linux-x64-musl@0.5.29", "", { "os": "linux", "cpu": "x64" }, "sha512-gquqwA/39tH4pFl+J9n3SOMSymjX+6kZ3kWgY3b94nXFTwac9bnFNMffIomgvlFaC4ArVqMnOZD3nuJ3H3VO1w=="],
 
-    "@libsql/win32-x64-msvc": ["@libsql/win32-x64-msvc@0.5.22", "", { "os": "win32", "cpu": "x64" }, "sha512-Fj0j8RnBpo43tVZUVoNK6BV/9AtDUM5S7DF3LB4qTYg1LMSZqi3yeCneUTLJD6XomQJlZzbI4mst89yspVSAnA=="],
+    "@libsql/win32-x64-msvc": ["@libsql/win32-x64-msvc@0.5.29", "", { "os": "win32", "cpu": "x64" }, "sha512-4/0CvEdhi6+KjMxMaVbFM2n2Z44escBRoEYpR+gZg64DdetzGnYm8mcNLcoySaDJZNaBd6wz5DNdgRmcI4hXcg=="],
 
     "@neon-rs/load": ["@neon-rs/load@0.0.4", "", {}, "sha512-kTPhdZyTQxB+2wpiRcFWrDcejc4JI6tkPuS7UZCG4l6Zvc5kU/gGQ/ozvHTh1XR5tS+UlfAfGuPajjzQjCiHCw=="],
 
@@ -405,7 +406,7 @@
 
     "levn": ["levn@0.4.1", "", { "dependencies": { "prelude-ls": "^1.2.1", "type-check": "~0.4.0" } }, "sha512-+bT2uH4E5LGE7h/n3evcS/sQlJXCpIp6ym8OWJ5eV6+67Dsql/LaaT7qJBAt2rzfoa/5QBGBhxDix1dMt2kQKQ=="],
 
-    "libsql": ["libsql@0.5.22", "", { "dependencies": { "@neon-rs/load": "^0.0.4", "detect-libc": "2.0.2" }, "optionalDependencies": { "@libsql/darwin-arm64": "0.5.22", "@libsql/darwin-x64": "0.5.22", "@libsql/linux-arm-gnueabihf": "0.5.22", "@libsql/linux-arm-musleabihf": "0.5.22", "@libsql/linux-arm64-gnu": "0.5.22", "@libsql/linux-arm64-musl": "0.5.22", "@libsql/linux-x64-gnu": "0.5.22", "@libsql/linux-x64-musl": "0.5.22", "@libsql/win32-x64-msvc": "0.5.22" }, "os": [ "linux", "win32", "darwin", ], "cpu": [ "arm", "x64", "arm64", ] }, "sha512-NscWthMQt7fpU8lqd7LXMvT9pi+KhhmTHAJWUB/Lj6MWa0MKFv0F2V4C6WKKpjCVZl0VwcDz4nOI3CyaT1DDiA=="],
+    "libsql": ["libsql@0.5.29", "", { "dependencies": { "@neon-rs/load": "^0.0.4", "detect-libc": "2.0.2" }, "optionalDependencies": { "@libsql/darwin-arm64": "0.5.29", "@libsql/darwin-x64": "0.5.29", "@libsql/linux-arm-gnueabihf": "0.5.29", "@libsql/linux-arm-musleabihf": "0.5.29", "@libsql/linux-arm64-gnu": "0.5.29", "@libsql/linux-arm64-musl": "0.5.29", "@libsql/linux-x64-gnu": "0.5.29", "@libsql/linux-x64-musl": "0.5.29", "@libsql/win32-x64-msvc": "0.5.29" }, "os": [ "linux", "win32", "darwin", ], "cpu": [ "arm", "x64", "arm64", ] }, "sha512-8lMP8iMgiBzzoNbAPQ59qdVcj6UaE/Vnm+fiwX4doX4Narook0a4GPKWBEv+CR8a1OwbfkgL18uBfBjWdF0Fzg=="],
 
     "locate-path": ["locate-path@6.0.0", "", { "dependencies": { "p-locate": "^5.0.0" } }, "sha512-iPZK6eYjbxRu3uB4/WZ3EsEIMJFMqAoopl3R+zuq0UjcAm/MO6KCweDgPfP3elTztoKP3KtnVHxTn2NHBSDVUw=="],
 

@@ -2,8 +2,12 @@ import { drizzle } from "drizzle-orm/libsql/node";
 import * as schema from "./schema";
 import { isValidKey } from "./key";
 import { eq } from "drizzle-orm";
+import { env } from "../env";
+import { join } from "node:path";
 
-export const db = drizzle("file:db.sqlite", {
+export const filePath = join(env.DATA_DIR, "db.sqlite");
+
+export const db = drizzle(`file:${filePath}`, {
 	relations: schema.relations,
 	schema: schema,
 });

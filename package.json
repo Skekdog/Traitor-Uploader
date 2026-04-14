@@ -4,25 +4,26 @@
   "type": "module",
   "private": true,
   "devDependencies": {
+    "@elysiajs/bearer": "^1.4.3",
+    "@elysiajs/eden": "^1.4.8",
     "@eslint/js": "^10.0.1",
+    "@libsql/client": "^0.17.2",
     "@stylistic/eslint-plugin": "^5.7.1",
     "@types/bun": "latest",
     "drizzle-kit": "^1.0.0-beta.15-859cf75",
+    "drizzle-orm": "^1.0.0-beta.15-859cf75",
+    "drizzle-seed": "^1.0.0-beta.15-859cf75",
+    "elysia": "^1.4.22",
     "eslint": "^10.0.0",
     "globals": "^17.3.0",
     "jiti": "^2.6.1",
-    "typescript-eslint": "^8.55.0"
+    "typescript-eslint": "^8.55.0",
+    "ulid": "^3.0.2"
   },
   "peerDependencies": {
     "typescript": "^5"
   },
   "dependencies": {
-    "@elysiajs/bearer": "^1.4.3",
-    "@elysiajs/eden": "^1.4.8",
-    "@libsql/client": "^0.17.0",
-    "drizzle-orm": "^1.0.0-beta.15-859cf75",
-    "drizzle-seed": "^1.0.0-beta.15-859cf75",
-    "elysia": "^1.4.22",
-    "ulid": "^3.0.2"
+    "@libsql/linux-x64-musl": "^0.5.29"
   }
 }
