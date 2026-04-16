@@ -127,7 +127,6 @@ export async function saveKey(
 export async function deleteKey(key: string): Promise<void> {
 	if (!isValidKey(key)) return;
 
-	console.log(key);
 	await db.delete(schema.groupTable).where(eq(schema.groupTable.key, key));
 
 	return;
