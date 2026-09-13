@@ -23,7 +23,7 @@ export default defineConfig([
 		extends: ["js/recommended"],
 		languageOptions: {
 			globals: {
-				...globals.bunBuiltin,
+				...globals.node,
 			},
 		},
 

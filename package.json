@@ -1,29 +1,42 @@
 {
-  "name": "traitor-uploader",
-  "module": "Source/index",
-  "type": "module",
-  "private": true,
-  "devDependencies": {
-    "@elysiajs/bearer": "^1.4.3",
-    "@elysiajs/eden": "^1.4.8",
-    "@eslint/js": "^10.0.1",
-    "@libsql/client": "^0.17.2",
-    "@stylistic/eslint-plugin": "^5.7.1",
-    "@types/bun": "latest",
-    "drizzle-kit": "^1.0.0-beta.15-859cf75",
-    "drizzle-orm": "^1.0.0-beta.15-859cf75",
-    "drizzle-seed": "^1.0.0-beta.15-859cf75",
-    "elysia": "^1.4.22",
-    "eslint": "^10.0.0",
-    "globals": "^17.3.0",
-    "jiti": "^2.6.1",
-    "typescript-eslint": "^8.55.0",
-    "ulid": "^3.0.2"
+	"name": "traitor-uploader",
+	"type": "module",
+	"private": true,
+	"scripts": {
+		"build": "nitro build",
+		"dev": "nitro dev",
+		"preview": "nitro preview"
   },
-  "peerDependencies": {
-    "typescript": "^5"
-  },
-  "dependencies": {
-    "@libsql/linux-x64-musl": "^0.5.29"
-  }
+	"devDependencies": {
+		"@elysiajs/bearer": "^1.4.3",
+		"@elysiajs/eden": "^1.4.8",
+		"@eslint/js": "^10.0.1",
+		"@libsql/client": "^0.17.2",
+		"@stylistic/eslint-plugin": "^5.7.1",
+		"@types/bun": "latest",
+		"drizzle-kit": "^1.0.0-beta.15-859cf75",
+		"drizzle-orm": "^1.0.0-beta.15-859cf75",
+		"drizzle-seed": "^1.0.0-beta.15-859cf75",
+		"elysia": "^1.4.22",
+		"eslint": "^10.0.0",
+		"globals": "^17.3.0",
+		"jiti": "^2.6.1",
+		"nitro": "3.0.260903-beta",
+		"typescript": "^7.0.2",
+		"typescript-eslint": "^8.55.0",
+		"ulid": "^3.0.2"
+	},
+	"dependencies": {
+		"@libsql/linux-x64-musl": "^0.5.29"
+	},
+	"imports": {
+		"#/*": "./src/*"
+	},
+	"devEngines": {
+		"runtime": {
+			"name": "node",
+			"version": "26.8.2",
+			"onFail": "download"
+		}
+	}
 }
