@@ -1,4 +1,4 @@
-import assert from "./util/assert.js";
+import { assert } from "#/util/assert.js";
 import path from "node:path";
 
 export const env = {
