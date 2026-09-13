@@ -2,7 +2,7 @@
 // eslint is for some reason absolutely scared senseless of drizzle, but its FINE.
 import { defineRelations } from "drizzle-orm";
 import { integer, primaryKey, sqliteTable, text } from "drizzle-orm/sqlite-core";
-import { generateId } from "../Util/id";
+import { generateId } from "#/util/id.js";
 
 export const userTable = sqliteTable("users", {
 	id: text("id")

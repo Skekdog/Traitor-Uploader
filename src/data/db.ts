@@ -1,5 +1,5 @@
 import { drizzle } from "drizzle-orm/libsql/node";
-import * as schema from "./schema";
+import * as schema from "./schema.js";
 import { isValidKey } from "./key";
 import { eq } from "drizzle-orm";
 import { env } from "../env";
@@ -9,7 +9,6 @@ export const filePath = join(env.DATA_DIR, "db.sqlite");
 
 export const db = drizzle(`file:${filePath}`, {
 	relations: schema.relations,
-	schema: schema,
 });
 
 export async function doesKeyExist(key: string): Promise<boolean> {
@@ -26,12 +25,13 @@ export async function doesKeyExist(key: string): Promise<boolean> {
 	return true;
 }
 
-export async function createUserIfNotExists(
-	robloxUserId: string,
-) {
-	return await db.insert(schema.userTable).values({
-		robloxUserId: robloxUserId,
-	}).onConflictDoNothing();
+export async function createUserIfNotExists(robloxUserId: string) {
+	return await db
+		.insert(schema.userTable)
+		.values({
+			robloxUserId: robloxUserId,
+		})
+		.onConflictDoNothing();
 }
 
 async function getManyUsers(robloxUserIds: string[]): Promise<schema.User[]> {
@@ -56,7 +56,7 @@ async function getManyUsers(robloxUserIds: string[]): Promise<schema.User[]> {
 }
 
 export async function saveNewKey(key: string): Promise<string> {
-	return db.transaction(async tx => {
+	return db.transaction(async (tx) => {
 		const [group] = await tx
 			.insert(schema.groupTable)
 			.values({
@@ -89,15 +89,21 @@ export async function saveKey(
 			},
 		});
 
-		if (!existingGroup) throw new Error("key does not exist, use saveNewKey() first");
+		if (!existingGroup)
+			throw new Error("key does not exist, use saveNewKey() first");
 
 		const groupId = existingGroup.id;
 
-		await tx.update(schema.groupTable).set({
-			isAdmin: isAdmin,
-		}).where(eq(schema.groupTable.id, groupId));
+		await tx
+			.update(schema.groupTable)
+			.set({
+				isAdmin: isAdmin,
+			})
+			.where(eq(schema.groupTable.id, groupId));
 
-		await tx.delete(schema.userToGroupTable).where(eq(schema.userToGroupTable.groupId, groupId));
+		await tx
+			.delete(schema.userToGroupTable)
+			.where(eq(schema.userToGroupTable.groupId, groupId));
 
 		if (users.length > 0) {
 			await tx
@@ -111,15 +117,20 @@ export async function saveKey(
 				.onConflictDoNothing();
 		}
 
-		await tx.delete(schema.assetTable).where(eq(schema.assetTable.groupId, groupId));
+		await tx
+			.delete(schema.assetTable)
+			.where(eq(schema.assetTable.groupId, groupId));
 
 		if (authorisedAssets.length > 0) {
-			await tx.insert(schema.assetTable).values(
-				authorisedAssets.map((assetId) => ({
-					robloxId: assetId.toString(),
-					groupId,
-				})),
-			).onConflictDoNothing();
+			await tx
+				.insert(schema.assetTable)
+				.values(
+					authorisedAssets.map((assetId) => ({
+						robloxId: assetId.toString(),
+						groupId,
+					})),
+				)
+				.onConflictDoNothing();
 		}
 	});
 }
@@ -171,7 +182,9 @@ export async function getAdmins() {
 }
 
 export async function getIsAdmin(key: string) {
-	return (await getAdmins())?.find(val => val.key === key)?.isAdmin ?? false;
+	return (
+		(await getAdmins())?.find((val) => val.key === key)?.isAdmin ?? false
+	);
 }
 
 export async function getUsers(key: string) {

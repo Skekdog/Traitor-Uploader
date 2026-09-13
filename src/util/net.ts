@@ -1,0 +1,193 @@
+import type { HTTPMethod } from "nitro/h3";
+import { env } from "#/env.js";
+
+export type RequestResponse<T> = {
+	Raw: Response;
+	Status: number;
+} & (
+	| {
+			Ok: true;
+			Result: T;
+	  }
+	| {
+			Ok: false;
+			Result: string;
+	  }
+);
+
+export type Operation<Response> = {
+	path: string;
+	operationId: string;
+} & (
+	| {
+			done: false;
+			response: null;
+	  }
+	| {
+			done: true;
+			response: Response;
+	  }
+);
+
+export function parseError(
+	error: Record<string, any> | Record<string, any>[],
+): string {
+	if (typeof error !== "object") return JSON.stringify(error);
+
+	if (Array.isArray(error)) {
+		let result = "";
+		error.forEach((val) => {
+			result += parseError(
+				val as Record<string, any> | Record<string, any>[],
+			);
+		});
+		return result;
+	}
+
+	if (error.title) {
+		// a v1 "detailed" error: https://create.roblox.com/docs/cloud/reference/errors#gateway-errors
+		let details = "";
+		if (error.errors) {
+			for (const [key, value] of Object.entries(
+				error.errors as string[],
+			)) {
+				details += key + ": " + value + "; ";
+			}
+			details = details.slice(0, -2);
+		}
+
+		return error.title + "{" + details + "}";
+	} else if (error.message) {
+		return error.message as string;
+	} else if (error.errors) {
+		return parseError(error.errors as string[]);
+	}
+
+	let details = "";
+	for (const [key, value] of Object.entries(error)) {
+		details += key + ": " + value + "; ";
+	}
+	details = details.slice(0, -2);
+
+	return details ?? JSON.stringify(error);
+}
+
+export async function makeRequest<T>(
+	url: string,
+	method?: HTTPMethod,
+	body?: BodyInit,
+	contentType?: string,
+	headers?: Headers,
+	blob?: boolean,
+): Promise<RequestResponse<T>> {
+	if (url.endsWith("/"))
+		throw new Error("Must **not** have trailing slash...");
+
+	headers = headers ?? new Headers();
+	headers.append("x-api-key", env.ROBLOX_API_KEY);
+
+	if (contentType) headers.append("content-type", contentType);
+
+	const response = await fetch(url, {
+		method: method,
+		body: body,
+		headers: headers,
+	});
+
+	if (blob) {
+		if (!response.ok) {
+			const text = (await response.text()) ?? response.statusText;
+			const asObject = JSON.parse(text) as object;
+
+			return new Promise((resolve) => {
+				resolve({
+					Ok: false,
+					Result: parseError(asObject),
+					Status: response.status,
+					Raw: response,
+				});
+			});
+		}
+
+		const data = await response.blob();
+
+		return new Promise((resolve) => {
+			resolve({
+				Ok: true,
+				Result: data as T,
+				Status: response.status,
+				Raw: response,
+			});
+		});
+	}
+
+	const text = (await response.text()) ?? response.statusText;
+	const asObject = JSON.parse(text) as object;
+
+	if (!response.ok)
+		return new Promise((resolve) => {
+			resolve({
+				Ok: false,
+				Result: parseError(asObject),
+				Status: response.status,
+				Raw: response,
+			});
+		});
+
+	return new Promise((resolve) => {
+		resolve({
+			Ok: true,
+			Result: asObject as T,
+			Status: response.status,
+			Raw: response,
+		});
+	});
+}
+
+export async function poll<T>(
+	basePath: string,
+	operation: Operation<T>,
+): Promise<RequestResponse<T>> {
+	if (!basePath.endsWith("/"))
+		throw new Error("Must **have** trailing slash...");
+
+	const response = await makeRequest<Operation<T>>(basePath + operation.path);
+	if (!response.Ok) {
+		return new Promise((resolve) => {
+			resolve(response);
+		});
+	}
+
+	const result = response.Result;
+	if (!result.done) {
+		return new Promise((resolve) => {
+			setTimeout(() => {
+				resolve(poll(basePath, operation));
+			}, 1000);
+		});
+	}
+
+	return new Promise((resolve) => {
+		resolve({
+			Ok: true,
+			Status: response.Status,
+			Result: response.Result.response!,
+			Raw: response.Raw,
+		});
+	});
+}
+
+export function createFileForm(
+	data: Uint8Array,
+	fileName: string,
+	mimeType: string,
+): FormData {
+	const formData = new FormData();
+
+	const safeData = new Uint8Array(data); // had to make a new one here, thank typescript!
+	const blob = new Blob([safeData], { type: mimeType });
+
+	formData.append("fileContent", blob, fileName);
+
+	return formData;
+}

@@ -1,5 +1,5 @@
 import { isValid } from "ulid";
-import { generateId } from "../Util/id";
+import { generateId } from "#/util/id.js";
 
 export function generate(): string {
 	return generateId();
