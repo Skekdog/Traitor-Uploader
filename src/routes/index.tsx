@@ -1,4 +1,4 @@
-import clientAssets from "#/app/page.js?assets=client";
+import clientAssets from "#/client/page.js?assets=client";
 
 export default () => {
 	const assets = clientAssets;

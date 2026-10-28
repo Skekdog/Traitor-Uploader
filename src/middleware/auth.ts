@@ -7,7 +7,14 @@ export default defineMiddleware((event) => {
 		event.context.bearer = authHeader.substring(7);
 	}
 
-	if (!event.url.pathname.startsWith("/api")) return;
+	const path = event.url.pathname;
+
+	if (!path.startsWith("/api")) return;
+
+	const isPublicAsset =
+		/^\/api\/asset\/[^/]+$/.test(path) && event.req.method === "GET"; // i ❤️ regex
+
+	if (isPublicAsset) return;
 
 	if (!event.context.bearer) {
 		throw new HTTPError({

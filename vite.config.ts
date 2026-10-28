@@ -38,7 +38,7 @@ export default defineConfig({
 	build: {
 		outDir: ".output/public",
 		rollupOptions: {
-			input: "./src/app/page.ts",
+			input: "./src/client/page.ts",
 			output: {
 				entryFileNames: "app/page.js",
 				format: "esm",
