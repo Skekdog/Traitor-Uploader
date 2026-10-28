@@ -147,6 +147,30 @@ export async function getAllGroups(): Promise<schema.Group[]> {
 	return await db.query.groupTable.findMany();
 }
 
+export async function isUserAuthorisedToAccessAsset(
+	assetId: string,
+	userId: string,
+): Promise<boolean> {
+	const queriedAsset = await db.query.assetTable.findFirst({
+		where: {
+			id: assetId,
+		},
+		with: {
+			owner: {
+				with: {
+					participants: {
+						where: {
+							robloxUserId: userId,
+						},
+					},
+				},
+			},
+		},
+	});
+
+	return Boolean(queriedAsset);
+}
+
 export async function getAuthorisedAssets(
 	key: string,
 ): Promise<string[] | null> {
