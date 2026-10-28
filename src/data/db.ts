@@ -1,7 +1,7 @@
 import { drizzle } from "drizzle-orm/libsql/node";
 import * as schema from "./schema.js";
 import { isValidKey } from "./key";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { env } from "../env";
 import { join } from "node:path";
 
@@ -151,22 +151,31 @@ export async function isUserAuthorisedToAccessAsset(
 	assetId: string,
 	userId: string,
 ): Promise<boolean> {
-	const queriedAsset = await db.query.assetTable.findFirst({
-		where: {
-			id: assetId,
-		},
-		with: {
-			owner: {
-				with: {
-					participants: {
-						where: {
-							robloxUserId: userId,
-						},
-					},
-				},
-			},
-		},
-	});
+	const [queriedAsset] = await db
+		.select({
+			asset: schema.assetTable,
+			owner: schema.groupTable,
+		})
+		.from(schema.assetTable)
+		.innerJoin(
+			schema.groupTable,
+			eq(schema.assetTable.groupId, schema.groupTable.id),
+		)
+		.innerJoin(
+			schema.userToGroupTable,
+			eq(schema.groupTable.id, schema.userToGroupTable.groupId),
+		)
+		.innerJoin(
+			schema.userTable,
+			eq(schema.userToGroupTable.userId, schema.userTable.id),
+		)
+		.where(
+			and(
+				eq(schema.assetTable.robloxId, assetId),
+				eq(schema.userTable.robloxUserId, userId),
+			),
+		)
+		.limit(1);
 
 	return Boolean(queriedAsset);
 }
