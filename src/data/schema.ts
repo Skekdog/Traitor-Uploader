@@ -1,7 +1,12 @@
 /* eslint @typescript-eslint/no-unsafe-assignment: off, @typescript-eslint/no-unsafe-call: off, @typescript-eslint/no-unsafe-member-access: off */
 // eslint is for some reason absolutely scared senseless of drizzle, but its FINE.
 import { defineRelations } from "drizzle-orm";
-import { integer, primaryKey, sqliteTable, text } from "drizzle-orm/sqlite-core";
+import {
+	integer,
+	primaryKey,
+	sqliteTable,
+	text,
+} from "drizzle-orm/sqlite-core";
 import { generateId } from "#/util/id.js";
 
 export const userTable = sqliteTable("users", {
@@ -20,7 +25,7 @@ export const groupTable = sqliteTable("groups", {
 	key: text("key")
 		.$defaultFn(() => generateId())
 		.notNull(),
-	isAdmin: integer("isAdmin", {mode: "boolean"}).notNull().default(false),
+	isAdmin: integer("isAdmin", { mode: "boolean" }).notNull().default(false),
 });
 
 export const userToGroupTable = sqliteTable(
@@ -32,7 +37,7 @@ export const userToGroupTable = sqliteTable(
 		groupId: text("group_id")
 			.notNull()
 			.references(() => groupTable.id, {
-				onDelete: "cascade"
+				onDelete: "cascade",
 			}),
 	},
 	(t) => [primaryKey({ columns: [t.userId, t.groupId] })],
@@ -43,9 +48,12 @@ export const assetTable = sqliteTable("assets", {
 		.primaryKey()
 		.$defaultFn(() => generateId()),
 	robloxId: text("roblox_id").notNull().unique(),
-	groupId: text("group_id").notNull().references(() => groupTable.id, {
-		onDelete: "cascade"
-	}),
+	groupId: text("group_id")
+		.notNull()
+		.references(() => groupTable.id, {
+			onDelete: "cascade",
+		}),
+	public: integer("public", { mode: "boolean" }).default(false),
 });
 
 export const relations = defineRelations(
@@ -64,8 +72,8 @@ export const relations = defineRelations(
 			owner: r.one.groupTable({
 				from: r.assetTable.groupId,
 				to: r.groupTable.id,
-			})
-		}
+			}),
+		},
 	}),
 );
 
