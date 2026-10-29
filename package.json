@@ -5,7 +5,8 @@
 	"scripts": {
 		"build": "vite build",
 		"dev": "vite dev",
-		"preview": "vite preview"
+		"preview": "vite preview",
+		"db:generate": "drizzle-kit generate"
 	},
 	"devDependencies": {
 		"@eslint/js": "^10.0.1",
