@@ -1,5 +1,7 @@
 import { defineMiddleware, HTTPError } from "nitro";
 
+const ALLOWED_UNAUTHORISED_ASSET_API_METHODS = ["GET", "PATCH"];
+
 export default defineMiddleware((event) => {
 	const authHeader = event.req.headers.get("authorization");
 
@@ -11,10 +13,11 @@ export default defineMiddleware((event) => {
 
 	if (!path.startsWith("/api")) return;
 
-	const isPublicAsset =
-		/^\/api\/asset\/[^/]+$/.test(path) && event.req.method === "GET"; // i ❤️ regex
+	const isPublicEndpoint =
+		/^\/api\/asset\/[^/]+$/.test(path) &&
+		ALLOWED_UNAUTHORISED_ASSET_API_METHODS.includes(event.req.method); // i ❤️ regex
 
-	if (isPublicAsset) return;
+	if (isPublicEndpoint) return;
 
 	if (!event.context.bearer) {
 		throw new HTTPError({
